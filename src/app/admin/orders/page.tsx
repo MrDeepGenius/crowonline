@@ -12,7 +12,7 @@ const FILTERS = ["all", "PAID", "PENDING", "EXPIRED", "FAILED"] as const;
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; confirmed?: string; already?: string }>;
 }) {
   const params = await searchParams;
   const status = params.status ?? "all";
@@ -28,6 +28,14 @@ export default async function AdminOrdersPage({
       description="Revisa el ciclo completo de compra: creación, pago, expiración y fallo."
       activePath="/admin/orders"
     >
+      {params.confirmed ? (
+        <p className="mb-5 rounded-xl border border-crow-success/30 bg-crow-success/10 px-4 py-3 text-[12.5px] text-crow-success">
+          Orden {params.confirmed} confirmada como PAID
+          {params.already ? " (ya estaba pagada: no se duplicó nada)" : ""}. Enrollment,
+          comisiones y wallets actualizados.
+        </p>
+      ) : null}
+
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Órdenes" value={all.length} />
         <StatCard

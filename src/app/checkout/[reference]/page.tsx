@@ -6,10 +6,11 @@ import { PaymentSummary } from "@/components/checkout/payment-summary";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PRODUCT_TYPE_LABEL } from "@/lib/plans";
 import { getCurrentUser } from "@/lib/auth/session";
 import { cancelOrderAction, confirmPaymentDemoAction } from "@/server/actions/payments";
 import prisma from "@/lib/db";
-import { ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/domain";
+import { ORDER_STATUS_LABEL, type OrderStatus, type ProductType } from "@/lib/domain";
 import { formatDateTime, formatUsdt } from "@/lib/utils";
 
 type Params = Promise<{ reference: string }>;
@@ -24,7 +25,12 @@ export default async function CheckoutPage({ params }: { params: Params }) {
   const order = await prisma.order.findFirst({
     where: { reference, buyerId: user.id },
     include: {
-      items: { include: { product: { select: { title: true, slug: true } } } },
+      buyer: { select: { name: true, email: true } },
+      items: {
+        include: {
+          product: { select: { title: true, slug: true, type: true, coverEmoji: true } },
+        },
+      },
       payment: true,
     },
   });
@@ -32,6 +38,7 @@ export default async function CheckoutPage({ params }: { params: Params }) {
 
   const payment = order.payment;
   const isPending = order.status === "PENDING";
+  const item = order.items[0];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -42,12 +49,43 @@ export default async function CheckoutPage({ params }: { params: Params }) {
             {ORDER_STATUS_LABEL[order.status as OrderStatus] ?? order.status}
           </Badge>
           <h1 className="mt-4 text-3xl font-semibold tracking-tight">
-            Completa tu pago en USDT
+            Checkout · {item?.title ?? "Orden CROW"}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-crow-muted">
-            Envía exactamente el monto indicado a la dirección BEP-20. La orden se
-            confirma al detectar la transacción con las confirmaciones requeridas.
+            Revisa tu compra y envía exactamente el monto indicado a la dirección
+            BEP-20. Al confirmarse el pago se desbloquea en tu biblioteca y se
+            reparten las comisiones de afiliados.
           </p>
+
+          {item ? (
+            <div className="mt-6 flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-gradient-to-br from-crow-violet/30 to-transparent text-2xl">
+                {item.product.coverEmoji}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold">{item.title}</p>
+                <p className="mt-0.5 text-[12px] text-crow-muted">
+                  {PRODUCT_TYPE_LABEL[item.product.type as ProductType] ?? item.product.type} ·{" "}
+                  {formatUsdt(item.priceUsdt)}
+                </p>
+              </div>
+              <span className="shrink-0 rounded-xl bg-crow-violet/12 px-3 py-1.5 text-[13px] font-semibold text-crow-glow">
+                Total {formatUsdt(order.totalUsdt)}
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-2 text-[12px] text-crow-muted">
+            <span className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-1.5">
+              Comprador: {order.buyer.name} · {order.buyer.email}
+            </span>
+            <span className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-1.5">
+              Método: USDT BEP-20
+            </span>
+            <span className="rounded-lg border border-white/[0.07] bg-white/[0.02] px-3 py-1.5">
+              Referencia {order.reference}
+            </span>
+          </div>
 
           <div className="mt-8 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
             <Card className="space-y-4">

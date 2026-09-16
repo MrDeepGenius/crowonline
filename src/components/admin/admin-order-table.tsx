@@ -1,6 +1,8 @@
 import { Badge, StatusBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { ORDER_STATUS_LABEL, type OrderStatus } from "@/lib/domain";
+import { confirmPaymentAdminAction } from "@/server/actions/payments";
 import { formatDateTime, formatUsdt } from "@/lib/utils";
 
 type AdminOrder = {
@@ -33,6 +35,7 @@ export function AdminOrderTable({ orders }: { orders: AdminOrder[] }) {
               <th className="py-2">Fecha</th>
               <th className="py-2">Estado</th>
               <th className="py-2 text-right">Total</th>
+              <th className="py-2 text-right">Confirmación dev</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.05]">
@@ -65,6 +68,18 @@ export function AdminOrderTable({ orders }: { orders: AdminOrder[] }) {
                 </td>
                 <td className="py-2.5 text-right font-medium text-crow-text">
                   {formatUsdt(order.totalUsdt)}
+                </td>
+                <td className="py-2.5 text-right">
+                  {order.status === "PENDING" ? (
+                    <form action={confirmPaymentAdminAction}>
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <Button type="submit" size="sm" variant="secondary">
+                        Confirmar PAID
+                      </Button>
+                    </form>
+                  ) : (
+                    <span className="text-[11px] text-crow-muted">—</span>
+                  )}
                 </td>
               </tr>
             ))}
