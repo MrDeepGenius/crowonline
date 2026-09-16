@@ -1,0 +1,531 @@
+// CROW MARKET — Prisma schema
+//
+// Local development datasource: SQLite (zero external services).
+// Production: swap `provider` to "postgresql" — every field type below is
+// PostgreSQL compatible (no enums, no native arrays, no Json columns; those
+// are represented as String + TypeScript-level constants in src/lib/domain).
+//
+// The connection string always comes from DATABASE_URL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// IDENTITY
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  // JSON array string of roles: ["BUYER","AFFILIATE","CREATOR","ADMIN"]
+  roles        String   @default("[\"BUYER\"]")
+  status       String   @default("ACTIVE") // ACTIVE | SUSPENDED
+  country      String?
+  avatarSeed   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile        Profile?
+  wallet         Wallet?
+  affiliate      Affiliate?
+  creatorPlan    CreatorSubscription?
+  products       Product[]            @relation("ProductCreator")
+  orders         Order[]
+  payments       Payment[]
+  reviews        Review[]
+  certificates   Certificate[]
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  commissions    Commission[]         @relation("CommissionEarner")
+  referrals      Referral[]           @relation("ReferralOwner")
+  clickEvents    ReferralEvent[]
+  withdrawals    Withdrawal[]
+  blueprints     Blueprint[]
+  publishedBy    ProductPublication[] @relation("PublicationActor")
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  headline  String?
+  bio       String?
+  website   String?
+  socialX   String?
+  socialIg  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// CREATOR PLANS
+// ---------------------------------------------------------------------------
+
+model CreatorSubscription {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  plan           String    @default("START") // START|BASIC|PRO|BUSINESS|ELITE
+  status         String    @default("ACTIVE") // ACTIVE|EXPIRED|PENDING
+  priceUsdt      Float     @default(20)
+  productLimit   Int       @default(2)
+  publishedLimit Int       @default(1)
+  startedAt      DateTime  @default(now())
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------------------
+// CATALOG
+// ---------------------------------------------------------------------------
+
+model Product {
+  id               String   @id @default(cuid())
+  creatorId        String
+  slug             String   @unique
+  title            String
+  shortDescription String
+  description      String
+  // COURSE | EBOOK | PDF | INTERACTIVE_WEB | RESOURCE_KIT
+  type             String
+  category         String
+  priceUsdt        Float    @default(0)
+  compareAtUsdt    Float?
+  coverGradient    String   @default("violet")
+  coverEmoji       String   @default("◆")
+  tags             String   @default("[]") // JSON array string
+  includes         String   @default("[]") // JSON array string
+  previewContent   String?
+  // DRAFT | IN_REVIEW | PUBLISHED | ARCHIVED
+  status           String   @default("DRAFT")
+  qualityScore     Int      @default(0)
+  ratingAvg        Float    @default(0)
+  ratingCount      Int      @default(0)
+  salesCount       Int      @default(0)
+  revenueUsdt      Float    @default(0)
+  blueprintId      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  creator     User                @relation("ProductCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  publication ProductPublication?
+  course      Course?
+  reviews     Review[]
+  orderItems  OrderItem[]
+  commissions Commission[]
+  enrollments Enrollment[]
+  certificates Certificate[]
+
+  @@index([status, category])
+  @@index([creatorId])
+}
+
+model ProductPublication {
+  id           String   @id @default(cuid())
+  productId    String   @unique
+  actorId      String?
+  slug         String   @unique
+  visibility   String   @default("PUBLIC") // PUBLIC | UNLISTED | PRIVATE
+  publishedAt  DateTime @default(now())
+  revenueShare String   @default("{}") // JSON snapshot of the split config used
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  actor   User?   @relation("PublicationActor", fields: [actorId], references: [id], onDelete: SetNull)
+}
+
+model Course {
+  id                 String   @id @default(cuid())
+  productId          String   @unique
+  level              String   @default("BEGINNER") // BEGINNER|INTERMEDIATE|ADVANCED
+  language           String   @default("es")
+  durationMin        Int      @default(0)
+  certificateEnabled Boolean  @default(true)
+  learningGoals      String   @default("[]") // JSON array string
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  modules Module[]
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId  String
+  title     String
+  summary   String?
+  position  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@index([courseId, position])
+}
+
+model Lesson {
+  id            String   @id @default(cuid())
+  moduleId      String
+  title         String
+  content       String   @default("")
+  videoUrl      String?
+  imageUrl      String?
+  imagePrompt   String?
+  durationMin   Int      @default(0)
+  position      Int      @default(0)
+  isFreePreview Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  exercises Exercise[]
+  progress  LessonProgress[]
+
+  @@index([moduleId, position])
+}
+
+model Exercise {
+  id           String @id @default(cuid())
+  lessonId     String
+  title        String
+  instructions String
+  kind         String @default("PRACTICE") // PRACTICE | QUIZ | PROJECT
+  position     Int    @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, position])
+}
+
+model Resource {
+  id        String   @id @default(cuid())
+  productId String
+  lessonId  String?
+  title     String
+  url       String?
+  kind      String   @default("LINK") // LINK|PDF|TEMPLATE|CHECKLIST|TOOL
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// LEARNING
+// ---------------------------------------------------------------------------
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  productId   String
+  progressPct Int       @default(0)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  progress LessonProgress[]
+
+  @@unique([userId, productId])
+}
+
+model LessonProgress {
+  id           String    @id @default(cuid())
+  userId       String
+  lessonId     String
+  enrollmentId String?
+  completed    Boolean   @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson     Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  enrollment Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  serial      String   @unique
+  userId      String
+  productId   String
+  creatorId   String
+  studentName String
+  courseTitle String
+  creatorName String
+  issuedAt    DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int      @default(5)
+  comment   String
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// ---------------------------------------------------------------------------
+// COMMERCE — payments in USDT BEP-20
+// ---------------------------------------------------------------------------
+
+model Order {
+  id             String    @id @default(cuid())
+  reference      String    @unique
+  buyerId        String
+  status         String    @default("PENDING") // PENDING|PAID|EXPIRED|FAILED|REFUNDED
+  subtotalUsdt   Float     @default(0)
+  totalUsdt      Float     @default(0)
+  currency       String    @default("USDT")
+  affiliateId    String?
+  referralCode   String?
+  paidAt         DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  buyer     User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  items     OrderItem[]
+  payment   Payment?
+  commissionSnapshot String @default("{}")
+
+  @@index([status])
+  @@index([buyerId])
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  orderId     String
+  productId   String
+  title       String
+  priceUsdt   Float
+  creatorId   String
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+}
+
+model Payment {
+  id            String    @id @default(cuid())
+  orderId       String    @unique
+  userId        String
+  provider      String    @default("usdt_bep20")
+  network       String    @default("BEP20")
+  address       String
+  amountUsdt    Float
+  status        String    @default("PENDING") // PENDING|PAID|EXPIRED|FAILED
+  txHash        String?
+  confirmations Int       @default(0)
+  requiredConfirmations Int @default(12)
+  expiresAt     DateTime?
+  confirmedAt   DateTime?
+  raw           String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  reference   String   @unique
+  kind        String // PAYMENT | COMMISSION | WITHDRAWAL | ADJUSTMENT | PLAN
+  status      String   @default("PENDING")
+  amountUsdt  Float
+  currency    String   @default("USDT")
+  userId      String?
+  orderId     String?
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  @@index([kind, status])
+}
+
+// ---------------------------------------------------------------------------
+// AFFILIATES
+// ---------------------------------------------------------------------------
+
+model Affiliate {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  referralCode        String   @unique
+  tier                String   @default("STARTER") // STARTER|PARTNER|LEADER
+  status              String   @default("ACTIVE")
+  clicks              Int      @default(0)
+  conversions         Int      @default(0)
+  totalSalesUsdt      Float    @default(0)
+  totalCommissionUsdt Float    @default(0)
+  crowPoints          Float    @default(0)
+  level1Unlocked      Boolean  @default(false)
+  emergencyReserveUsdt Float   @default(0)
+  parentAffiliateId   String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrals   Referral[]
+  events      ReferralEvent[]
+  commissions Commission[]
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  affiliateId    String
+  referredUserId String?
+  invitedEmail   String?
+  code           String
+  level          Int      @default(1)
+  createdAt      DateTime @default(now())
+
+  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  owner     User?     @relation("ReferralOwner", fields: [referredUserId], references: [id], onDelete: SetNull)
+
+  @@index([affiliateId])
+}
+
+model ReferralEvent {
+  id          String   @id @default(cuid())
+  affiliateId String?
+  userId      String?
+  code        String
+  kind        String // CLICK | CONVERSION
+  productId   String?
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  affiliate Affiliate? @relation(fields: [affiliateId], references: [id], onDelete: SetNull)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([code])
+}
+
+model Commission {
+  id         String   @id @default(cuid())
+  orderId    String
+  productId  String
+  affiliateId String?
+  earnerId   String
+  role       String // CREATOR|DIRECT_AFFILIATE|L1..L5|PLATFORM|EMERGENCY_RESERVE
+  level      Int?
+  rate       Float
+  amountUsdt Float
+  status     String   @default("AVAILABLE") // PENDING|AVAILABLE|PAID|REVERSED
+  reference  String   @unique
+  createdAt  DateTime @default(now())
+
+  earner    User       @relation("CommissionEarner", fields: [earnerId], references: [id], onDelete: Cascade)
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  affiliate Affiliate? @relation(fields: [affiliateId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// WALLET
+// ---------------------------------------------------------------------------
+
+model Wallet {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  currency          String   @default("USDT")
+  availableUsdt     Float    @default(0)
+  pendingUsdt       Float    @default(0)
+  totalEarnedUsdt   Float    @default(0)
+  totalWithdrawnUsdt Float   @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user         User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+  withdrawals  Withdrawal[]
+}
+
+model WalletTransaction {
+  id               String   @id @default(cuid())
+  walletId         String
+  userId           String
+  type             String // SALE_COMMISSION|DIRECT_AFFILIATE|LEVEL_BONUS|CREATOR_EARNING|WITHDRAWAL|ADJUSTMENT...
+  direction        String   @default("CREDIT") // CREDIT | DEBIT
+  amountUsdt       Float
+  balanceAfterUsdt Float    @default(0)
+  status           String   @default("COMPLETED") // PENDING|COMPLETED|REVERSED
+  reference        String   @unique
+  description      String
+  orderId          String?
+  createdAt        DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Withdrawal {
+  id           String    @id @default(cuid())
+  reference    String    @unique
+  userId       String
+  walletId     String
+  amountUsdt   Float
+  feeRate      Float     @default(0.03)
+  feeUsdt      Float     @default(0)
+  netUsdt      Float     @default(0)
+  method       String    @default("USDT_BEP20")
+  address      String
+  status       String    @default("PENDING") // PENDING|APPROVED|REJECTED|PAID
+  note         String?
+  adminNote    String?
+  reviewedById String?
+  txHash       String?
+  requestedAt  DateTime  @default(now())
+  reviewedAt   DateTime?
+  paidAt       DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// CREATOR STUDIO — AI blueprints
+// ---------------------------------------------------------------------------
+
+model Blueprint {
+  id          String   @id @default(cuid())
+  userId      String
+  idea        String
+  title       String
+  productType String
+  status      String   @default("DRAFT") // DRAFT|PUBLISHED
+  provider    String   @default("crow-demo")
+  data        String   @default("{}") // serialised ProductBlueprint
+  productId   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --crow-bg: #0b0b0b;
+  --crow-violet: #6a00ff;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  border-color: rgb(38 38 46);
+}
+
+html,
+body {
+  background-color: var(--crow-bg);
+  color: #ededf2;
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(106, 0, 255, 0.4);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0f0f12;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a34;
+  border-radius: 999px;
+  border: 2px solid #0f0f12;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a48;
+}
+
+@layer components {
+  .crow-container {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
+  }
+
+  .crow-card {
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.02] shadow-card backdrop-blur-sm;
+  }
+
+  .crow-card-hover {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:border-crow-violet/40 hover:shadow-glow;
+  }
+
+  .crow-surface {
+    @apply rounded-2xl border border-white/[0.06] bg-crow-surface/80;
+  }
+
+  .crow-input {
+    @apply w-full rounded-xl border border-white/[0.08] bg-black/40 px-4 py-2.5 text-sm text-crow-text placeholder:text-crow-muted/70 outline-none transition focus:border-crow-violet/60 focus:ring-2 focus:ring-crow-violet/25;
+  }
+
+  .crow-label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-crow-muted;
+  }
+
+  .crow-chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-3 py-1 text-xs font-medium text-crow-muted;
+  }
+
+  .crow-divider {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent;
+  }
+
+  .crow-glow-text {
+    @apply bg-gradient-to-r from-white via-crow-glow to-crow-violetSoft bg-clip-text text-transparent;
+  }
+
+  .crow-ai-grid {
+    background-image: var(--tw-gradient-grid, none);
+  }
+
+  .crow-noise {
+    background-image: radial-gradient(
+        circle at 1px 1px,
+        rgba(255, 255, 255, 0.06) 1px,
+        transparent 0
+      );
+    background-size: 22px 22px;
+  }
+}
+
+@layer utilities {
+  .crow-mask-fade {
+    mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  }
+
+  .grid-crow {
+    background-image: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.035) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
