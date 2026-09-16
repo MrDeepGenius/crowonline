@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/field";
 import { Badge } from "@/components/ui/badge";
+import { PRODUCT_TYPES, type ProductType } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
 export type StudioMessage = {
@@ -27,10 +28,13 @@ export function StudioChat({
   onSend,
   onGenerate,
   loading,
+  working,
   provider,
   mode,
   idea,
   onIdeaChange,
+  format,
+  onFormatChange,
   hasBlueprint,
 }: {
   messages: StudioMessage[];
@@ -39,10 +43,13 @@ export function StudioChat({
   onSend: () => void;
   onGenerate: () => void;
   loading: boolean;
+  working: "generate" | "materialize" | "publish" | null;
   provider: string;
   mode: "live" | "demo";
   idea: string;
   onIdeaChange: (value: string) => void;
+  format: ProductType;
+  onFormatChange: (value: ProductType) => void;
   hasBlueprint: boolean;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -119,6 +126,27 @@ export function StudioChat({
       </div>
 
       <div className="border-t border-white/[0.06] p-4">
+        <p className="mb-2 text-[11px] uppercase tracking-wider text-crow-muted">
+          Formato del producto
+        </p>
+        <div className="mb-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+          {PRODUCT_TYPES.map((type) => (
+            <button
+              key={type}
+              type="button"
+              onClick={() => onFormatChange(type)}
+              className={cn(
+                "rounded-lg border px-2 py-1.5 text-[10.5px] font-medium transition",
+                format === type
+                  ? "border-crow-violet/60 bg-crow-violet/15 text-crow-glow shadow-[0_0_18px_-6px_rgba(106,0,255,0.8)]"
+                  : "border-white/[0.08] bg-white/[0.02] text-crow-muted hover:text-crow-text",
+              )}
+            >
+              {type.replace("_", " ")}
+            </button>
+          ))}
+        </div>
+
         <div className="mb-3 space-y-2">
           <Textarea
             value={idea}
@@ -127,7 +155,11 @@ export function StudioChat({
             className="min-h-[76px]"
           />
           <Button onClick={onGenerate} disabled={loading || idea.trim().length < 6} className="w-full">
-            {hasBlueprint ? "Regenerar blueprint" : "Generar producto con IA"}
+            {working === "generate"
+              ? "Generando con IA…"
+              : hasBlueprint
+                ? "Regenerar blueprint"
+                : "Generar producto con IA"}
           </Button>
         </div>
 

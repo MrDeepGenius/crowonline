@@ -6,11 +6,10 @@ import { BriefCard } from "@/components/creator/brief-card";
 import { ModulesEditor } from "@/components/creator/modules-editor";
 import { ListsCard, QualityCard } from "@/components/creator/quality-card";
 import { StudioChat } from "@/components/creator/studio-chat";
+import { StudioPreview } from "@/components/creator/studio-preview";
 import { useStudio } from "@/components/creator/use-studio";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { saveStudioDraftAction } from "@/server/actions/creator";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -18,6 +17,7 @@ const TABS = [
   { id: "structure", label: "Estructura" },
   { id: "assets", label: "Listas" },
   { id: "quality", label: "Quality" },
+  { id: "preview", label: "Preview" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -37,10 +37,13 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
           onSend={studio.send}
           onGenerate={studio.generate}
           loading={studio.loading}
+          working={studio.working}
           provider={studio.provider}
           mode={studio.mode}
           idea={studio.idea}
           onIdeaChange={studio.setIdea}
+          format={studio.format}
+          onFormatChange={studio.changeFormat}
           hasBlueprint={Boolean(blueprint)}
         />
       </div>
@@ -49,6 +52,20 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
         {studio.error ? (
           <p className="rounded-xl border border-crow-danger/30 bg-crow-danger/10 px-4 py-3 text-[12.5px] text-crow-danger">
             {studio.error}
+          </p>
+        ) : null}
+
+        {studio.notice ? (
+          <p className="rounded-xl border border-crow-success/30 bg-crow-success/10 px-4 py-3 text-[12.5px] text-crow-success">
+            {studio.notice}
+            {studio.productSlug && studio.productStatus === "PUBLISHED" ? (
+              <>
+                {" "}
+                <a href={`/marketplace/${studio.productSlug}`} className="underline">
+                  Ver en marketplace →
+                </a>
+              </>
+            ) : null}
           </p>
         ) : null}
 
@@ -66,7 +83,7 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
             <Card className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-[11px] uppercase tracking-wider text-crow-muted">
-                  Live product blueprint
+                  Live product blueprint · paso {studio.step}/5
                 </p>
                 <h2 className="mt-1 truncate text-[16px] font-semibold">
                   {blueprint.title}
@@ -74,6 +91,7 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
                 <p className="mt-1 text-[11.5px] text-crow-muted">
                   {blueprint.productType} · {blueprint.category} ·{" "}
                   {blueprint.recommendedPriceUsdt} USDT
+                  {studio.productStatus ? ` · ${studio.productStatus}` : ""}
                 </p>
               </div>
 
@@ -81,15 +99,6 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
                 <Badge tone={studio.mode === "live" ? "success" : "warn"}>
                   {studio.mode === "live" ? studio.provider : `${studio.provider} · demo`}
                 </Badge>
-                <form action={saveStudioDraftAction}>
-                  <input type="hidden" name="idea" value={studio.idea} />
-                  <input type="hidden" name="blueprint" value={JSON.stringify(blueprint)} />
-                  <input type="hidden" name="provider" value={studio.provider} />
-                  {studio.blueprintId ? (
-                    <input type="hidden" name="blueprintId" value={studio.blueprintId} />
-                  ) : null}
-                  <Button type="submit">Guardar borrador y editar →</Button>
-                </form>
               </div>
             </Card>
 
@@ -121,6 +130,18 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
               <ListsCard blueprint={blueprint} onChange={studio.setBlueprint} />
             ) : null}
             {tab === "quality" ? <QualityCard blueprint={blueprint} /> : null}
+            {tab === "preview" ? (
+              <StudioPreview
+                blueprint={blueprint}
+                format={studio.format}
+                working={studio.working}
+                productId={studio.productId}
+                productSlug={studio.productSlug}
+                productStatus={studio.productStatus}
+                onMaterialize={studio.materialize}
+                onPublish={studio.publish}
+              />
+            ) : null}
           </>
         )}
       </div>

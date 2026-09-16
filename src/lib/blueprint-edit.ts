@@ -115,6 +115,21 @@ export function patchLesson(
   return patchModule(blueprint, moduleIndex, { lessons });
 }
 
+export function moveLesson(
+  blueprint: ProductBlueprint,
+  moduleIndex: number,
+  lessonIndex: number,
+  direction: -1 | 1,
+): ProductBlueprint {
+  const lessons = blueprint.modules[moduleIndex].lessons;
+  const target = lessonIndex + direction;
+  if (target < 0 || target >= lessons.length) return blueprint;
+  const next = [...lessons];
+  const [item] = next.splice(lessonIndex, 1);
+  next.splice(target, 0, item);
+  return patchModule(blueprint, moduleIndex, { lessons: next });
+}
+
 export function addExercise(
   blueprint: ProductBlueprint,
   moduleIndex: number,

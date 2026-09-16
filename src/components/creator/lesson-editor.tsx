@@ -3,7 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/field";
 import type { ProductBlueprint } from "@/lib/ai/blueprint";
-import { addExercise, patchExercise, patchLesson, removeLesson } from "@/lib/blueprint-edit";
+import {
+  addExercise,
+  moveLesson,
+  patchExercise,
+  patchLesson,
+  removeLesson,
+} from "@/lib/blueprint-edit";
 
 export function LessonEditor({
   blueprint,
@@ -24,6 +30,24 @@ export function LessonEditor({
         <span className="text-[11px] text-crow-muted">
           {moduleIndex + 1}.{lessonIndex + 1}
         </span>
+        <div className="flex shrink-0 flex-col">
+          <button
+            type="button"
+            onClick={() => onChange(moveLesson(blueprint, moduleIndex, lessonIndex, -1))}
+            className="rounded px-1 text-[10px] text-crow-muted hover:bg-white/[0.06] hover:text-crow-text"
+            aria-label="Subir lección"
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange(moveLesson(blueprint, moduleIndex, lessonIndex, 1))}
+            className="rounded px-1 text-[10px] text-crow-muted hover:bg-white/[0.06] hover:text-crow-text"
+            aria-label="Bajar lección"
+          >
+            ↓
+          </button>
+        </div>
         <Input
           value={lesson.title}
           onChange={(event) =>
