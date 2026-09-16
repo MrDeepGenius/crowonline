@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { makeReference } from "@/server/services/wallet";
+import { findAffiliateByCode, getReferredAffiliateCode } from "@/server/services/affiliate";
 
 export type CheckoutResult = {
   orderId: string;
@@ -10,6 +11,30 @@ export type CheckoutResult = {
   expiresAt: Date;
   productTitle: string;
 };
+
+/**
+ * Resolves the affiliate attribution for a purchase. Priority:
+ *   1. explicit referral code (e.g. ?ref= on the buy panel)
+ *   2. the code the buyer was referred by at registration (durable)
+ * A user can never attribute a sale to their own affiliate account
+ * (self-referral is neutralized), and a valid explicit code always wins.
+ */
+export async function resolveSaleAttribution(
+  buyerId: string,
+  referralCode?: string | null,
+): Promise<string | null> {
+  const explicit = referralCode ? (await findAffiliateByCode(referralCode)) ?? null : null;
+  if (explicit && explicit.userId !== buyerId) {
+    return explicit.referralCode;
+  }
+
+  const durable = await getReferredAffiliateCode(buyerId);
+  if (durable) {
+    const affiliate = await findAffiliateByCode(durable);
+    if (affiliate && affiliate.userId !== buyerId) return durable;
+  }
+  return null;
+}
 
 /**
  * Creates a PENDING order + USDT BEP-20 payment intent.
@@ -30,6 +55,10 @@ export async function createOrderWithPayment({
   });
   if (!product) throw new Error("Producto no disponible");
 
+  if (product.creatorId === buyerId) {
+    throw new Error("No puedes comprar tu propio producto.");
+  }
+
   const existing = await prisma.orderItem.findFirst({
     where: {
       productId,
@@ -38,6 +67,15 @@ export async function createOrderWithPayment({
     select: { id: true },
   });
   if (existing) throw new Error("Ya tienes este producto en tu biblioteca");
+
+  // A creator can never buy their own product (no self-purchase / self-referral).
+  if (product.creatorId === buyerId) {
+    throw new Error("No puedes comprar tu propio producto.");
+  }
+
+  // Durable affiliate attribution (registration referral wins when the URL
+  // code is absent). Self-referral is neutralized inside the resolver.
+  const attribution = await resolveSaleAttribution(buyerId, referralCode);
 
   const address =
     process.env.PAYMENT_USDT_BEP20_ADDRESS ?? "0x0000000000000000000000000000000000000000";
@@ -54,7 +92,7 @@ export async function createOrderWithPayment({
         subtotalUsdt: product.priceUsdt,
         totalUsdt: product.priceUsdt,
         currency: "USDT",
-        referralCode: referralCode ?? null,
+        referralCode: attribution,
         expiresAt,
         items: {
           create: {

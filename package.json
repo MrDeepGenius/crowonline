@@ -12,6 +12,7 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma db push --force-reset && prisma db seed",
     "db:studio": "prisma studio",
+    "test:attribution": "tsx scripts/test-attribution.ts",
     "setup": "prisma db push && prisma db seed"
   },
   "prisma": {
