@@ -61,7 +61,7 @@ export async function resolveUpline(code: string | null | undefined) {
   const upline: string[] = [direct.userId];
   let cursor = direct.parentAffiliateId;
 
-  for (let level = 0; level < 4 && cursor; level += 1) {
+  for (let level = 0; level < 5 && cursor; level += 1) {
     const parent = await prisma.affiliate.findUnique({
       where: { id: cursor },
       select: { userId: true, parentAffiliateId: true },
@@ -91,6 +91,23 @@ export async function registerReferral(code: string, referredUserId: string) {
       level: 1,
     },
   });
+}
+
+/**
+ * Durable attribution: the affiliate code a user was referred by at
+ * registration, so checkout can attribute the sale even when the buyer no
+ * longer carries the ?ref= query param. Returns null when the user was not
+ * referred or the code matches the user's own affiliate account.
+ */
+export async function getReferredAffiliateCode(userId: string) {
+  const referral = await prisma.referral.findFirst({
+    where: { referredUserId: userId },
+    orderBy: { createdAt: "asc" },
+    include: { affiliate: { select: { referralCode: true, userId: true } } },
+  });
+  if (!referral) return null;
+  if (referral.affiliate.userId === userId) return null;
+  return referral.affiliate.referralCode;
 }
 
 export async function trackReferralClick(code: string, productId?: string) {

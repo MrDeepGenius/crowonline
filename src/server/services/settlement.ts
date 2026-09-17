@@ -15,18 +15,21 @@ export async function confirmOrderPayment({
   txHash?: string;
   confirmations?: number;
 }) {
-  const order = await prisma.order.findUnique({ where: { id: orderId } });
-  if (!order) throw new Error("Orden no encontrada");
-  if (order.status === "PAID") return { alreadyPaid: true, snapshot: [] };
-
   const required = Number(process.env.PAYMENT_REQUIRED_CONFIRMATIONS ?? 12);
   const confirmed = confirmations ?? required;
 
+  // Atomic claim: only one concurrent caller can flip the order to PAID, so
+  // commissions are distributed exactly once even under webhook races.
+  const claimed = await prisma.order.updateMany({
+    where: { id: orderId, status: { not: "PAID" } },
+    data: { status: "PAID", paidAt: new Date() },
+  });
+
+  if (claimed.count === 0) {
+    return { alreadyPaid: true, snapshot: parseSnapshot((await prisma.order.findUnique({ where: { id: orderId } }))?.commissionSnapshot ?? null) };
+  }
+
   await prisma.$transaction([
-    prisma.order.update({
-      where: { id: orderId },
-      data: { status: "PAID", paidAt: new Date() },
-    }),
     prisma.payment.updateMany({
       where: { orderId },
       data: {
@@ -44,6 +47,15 @@ export async function confirmOrderPayment({
 
   const snapshot = await distributeCommissions(orderId);
   return { alreadyPaid: false, snapshot };
+}
+
+function parseSnapshot(raw: string | null) {
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as { role: string; amount: number; userId: string | null }[];
+  } catch {
+    return [];
+  }
 }
 
 export async function markOrderFailed({
