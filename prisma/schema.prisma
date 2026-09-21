@@ -1,18 +1,34 @@
 // CROW MARKET — Prisma schema
 //
-// Local development datasource: SQLite (zero external services).
-// Production: swap `provider` to "postgresql" — every field type below is
-// PostgreSQL compatible (no enums, no native arrays, no Json columns; those
-// are represented as String + TypeScript-level constants in src/lib/domain).
-//
-// The connection string always comes from DATABASE_URL.
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │  ENVIRONMENTS                                                           │
+// │                                                                         │
+// │  Development (SQLite — zero external services):                         │
+// │    provider = "sqlite"                                                  │
+// │    DATABASE_URL="file:./dev.db"                                         │
+// │                                                                         │
+// │  Production (PostgreSQL):                                               │
+// │    1. Change provider below to "postgresql"                             │
+// │    2. Set DATABASE_URL to your Postgres connection string               │
+// │       e.g. "postgresql://user:pass@host:5432/crow_market?schema=public" │
+// │    3. Run: npx prisma migrate deploy                                    │
+// │                                                                         │
+// │  All field types are PostgreSQL-compatible:                             │
+// │    - No SQLite-only types used                                          │
+// │    - No native enums (stored as String)                                 │
+// │    - No Json columns (stored as String + TS-level typing)               │
+// │    - No native arrays                                                   │
+// └─────────────────────────────────────────────────────────────────────────┘
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  // Development: use DATABASE_URL="postgresql://..." pointing to a local or remote PG.
+  // For quick local dev without PG, you can temporarily revert to "sqlite" + "file:./dev.db"
+  // but the canonical provider for this project is postgresql.
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

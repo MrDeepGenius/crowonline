@@ -47,6 +47,16 @@ async function cleanDatabase() {
 }
 
 async function main() {
+  // Idempotency guard: abort if the database already has users.
+  // This prevents accidental data wipes on re-runs in production.
+  // To force a fresh seed (dev only), run: npm run db:reset
+  const existingUsers = await prisma.user.count();
+  if (existingUsers > 0) {
+    console.log(`⚠️  Seed abortado: la base de datos ya contiene ${existingUsers} usuario(s).`);
+    console.log("   Para re-seedear en desarrollo usa: npm run db:reset");
+    return;
+  }
+
   console.log("→ Limpiando datos previos…");
   await cleanDatabase();
 

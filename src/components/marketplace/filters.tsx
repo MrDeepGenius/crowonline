@@ -75,12 +75,12 @@ export function MarketplaceFilters({
           />
         </div>
 
-        <div className="flex gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-3">
           <Select
             value={activeType}
             onChange={(event) => pushParams({ type: event.target.value })}
             aria-label="Filtrar por tipo"
-            className="lg:w-48"
+            className="w-full sm:w-44 lg:w-48"
           >
             <option value="all">Todos los formatos</option>
             {types.map((item) => (
@@ -94,7 +94,7 @@ export function MarketplaceFilters({
             value={sort}
             onChange={(event) => pushParams({ sort: event.target.value })}
             aria-label="Ordenar"
-            className="lg:w-44"
+            className="w-full sm:w-40 lg:w-44"
           >
             <option value="recent">Más recientes</option>
             <option value="sales">Más vendidos</option>

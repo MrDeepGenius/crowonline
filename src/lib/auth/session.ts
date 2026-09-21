@@ -18,10 +18,10 @@ export type SessionPayload = {
   roles: Role[];
 };
 
+import { getSessionSecret } from "@/lib/env";
+
 function getSecret() {
-  const secret =
-    process.env.SESSION_SECRET ?? "crow-dev-session-secret-change-me-000";
-  return new TextEncoder().encode(secret);
+  return getSessionSecret();
 }
 
 export async function hashPassword(password: string) {

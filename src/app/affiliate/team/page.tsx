@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { TeamTable } from "@/components/affiliate/team-table";
 import { StatCard } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAffiliateOverview } from "@/server/services/affiliate";
 import { formatUsdt } from "@/lib/utils";
@@ -9,7 +10,7 @@ export const metadata = { title: "Mi equipo" };
 
 export default async function AffiliateTeamPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const overview = await getAffiliateOverview(user.id);
 

@@ -32,14 +32,14 @@ export function AdminPaymentTable({ payments }: { payments: AdminPayment[] }) {
         action={<Badge tone="default">{payments.length} pagos</Badge>}
       />
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-[12.5px]">
+        <table className="w-full min-w-[520px] text-left text-[12.5px]">
           <thead className="text-[11px] uppercase tracking-wider text-crow-muted">
             <tr>
               <th className="py-2">Orden</th>
-              <th className="py-2">Usuario</th>
-              <th className="py-2">Wallet</th>
-              <th className="py-2">Confirmaciones</th>
-              <th className="py-2">Fecha</th>
+              <th className="py-2 hidden sm:table-cell">Usuario</th>
+              <th className="py-2 hidden lg:table-cell">Wallet</th>
+              <th className="py-2 hidden md:table-cell">Confirmaciones</th>
+              <th className="py-2 hidden md:table-cell">Fecha</th>
               <th className="py-2">Estado</th>
               <th className="py-2 text-right">Monto</th>
             </tr>
@@ -49,39 +49,37 @@ export function AdminPaymentTable({ payments }: { payments: AdminPayment[] }) {
               <tr key={payment.id}>
                 <td className="py-2.5 font-mono text-[11px] text-crow-text">
                   {payment.order.reference}
-                  {payment.provider === TEST_PAYMENT_PROVIDER ? <div><Badge tone="warn">TEST MODE · NO RETIRABLE</Badge></div> : null}
+                  {payment.provider === TEST_PAYMENT_PROVIDER ? <div className="mt-0.5"><Badge tone="warn">TEST</Badge></div> : null}
+                  {/* User inline on xs */}
+                  <div className="mt-1 sm:hidden">
+                    <p className="text-[12px] font-sans font-normal text-crow-text">{payment.user.name}</p>
+                    <p className="text-[10.5px] font-sans text-crow-muted">{payment.user.email}</p>
+                  </div>
                 </td>
-                <td className="py-2.5">
+                <td className="py-2.5 hidden sm:table-cell">
                   <p className="text-crow-text">{payment.user.name}</p>
                   <p className="text-[11px] text-crow-muted">{payment.user.email}</p>
                 </td>
-                <td className="py-2.5">
-                  <p className="text-crow-muted">
-                    {payment.provider} · {payment.network}
-                  </p>
-                  <p className="max-w-[280px] break-all font-mono text-[10.5px] text-crow-glow">
-                    Destino: {payment.address}<br />Origen: {payment.senderAddress ?? "—"}<br />
-                    Token: {payment.tokenAddress ?? "legacy"}<br />Bloque: {payment.blockNumber ?? "—"}
+                <td className="py-2.5 hidden lg:table-cell">
+                  <p className="text-crow-muted">{payment.provider} · {payment.network}</p>
+                  <p className="max-w-[240px] break-all font-mono text-[10.5px] text-crow-glow">
+                    {payment.address}
                   </p>
                 </td>
-                <td className="py-2.5 text-crow-muted">
+                <td className="py-2.5 text-crow-muted hidden md:table-cell">
                   {payment.confirmations}/{payment.requiredConfirmations}
                   {payment.txHash ? (
-                    <p className="max-w-[260px] break-all font-mono text-[10.5px]">
-                      {payment.txHash}
-                    </p>
+                    <p className="max-w-[200px] break-all font-mono text-[10.5px]">{payment.txHash}</p>
                   ) : null}
                 </td>
-                <td className="py-2.5 text-crow-muted">
+                <td className="py-2.5 text-crow-muted hidden md:table-cell">
                   {formatDateTime(payment.blockTime ?? payment.createdAt)}
                 </td>
                 <td className="py-2.5">
                   <StatusBadge status={payment.status} />
-                  {payment.verificationError ? <p className="max-w-[180px] text-crow-warn">{payment.verificationError}</p> : null}
+                  {payment.verificationError ? <p className="max-w-[140px] text-[10.5px] text-crow-warn">{payment.verificationError}</p> : null}
                 </td>
-                <td className="py-2.5 text-right font-medium text-crow-text">
-                  {formatUsdt(payment.amountUsdt)}
-                </td>
+                <td className="py-2.5 text-right font-medium text-crow-text">{formatUsdt(payment.amountUsdt)}</td>
               </tr>
             ))}
           </tbody>

@@ -11,6 +11,8 @@ import { getCourseProgress, isEnrolled } from "@/server/services/learning";
 import { parseJson } from "@/lib/utils";
 import prisma from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Aula" };
 
 export default async function LearnPage({

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { RegisterForm } from "@/components/auth/register-form";
 import { getSession } from "@/lib/auth/session";
+import { isGoogleConfigured } from "@/lib/auth/google";
 
 export const metadata = { title: "Crear cuenta" };
 
@@ -33,7 +34,7 @@ export default async function RegisterPage({
         </p>
       }
     >
-      <RegisterForm defaultPlan={params.plan} referralCode={referralCode} />
+      <RegisterForm defaultPlan={params.plan} referralCode={referralCode} googleEnabled={isGoogleConfigured()} />
     </AuthLayout>
   );
 }

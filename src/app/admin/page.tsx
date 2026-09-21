@@ -12,6 +12,8 @@ import {
 } from "@/server/services";
 import { listWithdrawalsForAdmin } from "@/server/services/withdrawal-review";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin" };
 
 export default async function AdminPage() {

@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ReferralLinkCard } from "@/components/affiliate/affiliate-stats";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAffiliateOverview } from "@/server/services/affiliate";
 import { listMarketplaceProducts } from "@/server/services/catalog";
@@ -13,7 +14,7 @@ export const metadata = { title: "Mis enlaces" };
 
 export default async function AffiliateLinksPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [overview, products] = await Promise.all([
     getAffiliateOverview(user.id),

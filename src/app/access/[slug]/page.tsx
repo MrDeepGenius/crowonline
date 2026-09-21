@@ -10,6 +10,8 @@ import { getCurrentUser } from "@/lib/auth/session";
 import type { ProductType } from "@/lib/domain";
 import { getProductBySlug } from "@/server/services/catalog";
 import { isEnrolled } from "@/server/services/learning";
+
+export const dynamic = "force-dynamic";
 import { formatUsdt, parseJson } from "@/lib/utils";
 
 export const metadata = { title: "Acceso al producto" };

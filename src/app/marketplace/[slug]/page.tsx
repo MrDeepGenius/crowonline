@@ -22,6 +22,8 @@ import { getReferredAffiliateCode } from "@/server/services/affiliate";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 type Params = Promise<{ slug: string }>;
 type Search = Promise<{ ref?: string }>;
 
@@ -80,7 +82,19 @@ export default async function ProductPage({
             ← Volver al marketplace
           </Link>
 
-          <div className="mt-6 grid gap-10 lg:grid-cols-[1.35fr_0.65fr]">
+          <div className="mt-6 grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
+            {/* Mobile: buy panel first for immediate CTA */}
+            <div className="lg:hidden">
+              <BuyPanel
+                productId={product.id}
+                priceUsdt={product.priceUsdt}
+                compareAt={product.compareAtUsdt}
+                isAuthenticated={Boolean(user)}
+                owned={owned}
+                referralCode={referralCode}
+              />
+            </div>
+
             <div>
               <ProductCover
                 coverEmoji={product.coverEmoji}
@@ -98,7 +112,7 @@ export default async function ProductPage({
                 salesCount={product.salesCount}
               />
 
-              <h1 className="mt-4 text-balance text-[30px] font-semibold leading-tight tracking-tight sm:text-[38px]">
+              <h1 className="mt-4 text-balance text-[26px] font-semibold leading-tight tracking-tight sm:text-[32px] lg:text-[38px]">
                 {product.title}
               </h1>
               <p className="mt-4 text-[15px] leading-relaxed text-crow-muted">
@@ -164,7 +178,7 @@ export default async function ProductPage({
               <FAQSection />
             </div>
 
-            <div>
+            <div className="hidden lg:block">
               <BuyPanel
                 productId={product.id}
                 priceUsdt={product.priceUsdt}

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { getCertificateBySerial } from "@/server/services/learning";
 import { formatDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Certificado" };
 
 export default async function CertificatePage({

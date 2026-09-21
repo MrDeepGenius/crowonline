@@ -4,6 +4,8 @@ import { Card, CardHeader, StatCard } from "@/components/ui/card";
 import { listAffiliatesForAdmin } from "@/server/services/affiliate";
 import { formatDate, formatUsdt } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Afiliados" };
 
 export default async function AdminAffiliatesPage() {

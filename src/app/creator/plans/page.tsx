@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { PlanCards } from "@/components/landing/plans-grid";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPlanUsage } from "@/server/services/creator";
 import { CREATOR_PLANS } from "@/lib/plans";
@@ -15,7 +16,7 @@ export default async function CreatorPlansPage({
   searchParams: Promise<{ plan?: string; updated?: string; error?: string }>;
 }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const usage = await getPlanUsage(user.id);
 

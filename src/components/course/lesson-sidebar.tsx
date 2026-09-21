@@ -14,6 +14,7 @@ export function LessonSidebar({
   activeLessonId,
   progressPct,
   certificateSerial,
+  onLessonClick,
 }: {
   productSlug: string;
   modules: Module[];
@@ -21,6 +22,7 @@ export function LessonSidebar({
   activeLessonId: string;
   progressPct: number;
   certificateSerial?: string | null;
+  onLessonClick?: () => void;
 }) {
   const total = modules.flatMap((module) => module.lessons).length;
 
@@ -71,6 +73,7 @@ export function LessonSidebar({
                   <li key={lesson.id}>
                     <Link
                       href={`/learn/${productSlug}?lesson=${lesson.id}`}
+                      onClick={onLessonClick}
                       className={cn(
                         "flex items-start gap-2.5 rounded-xl px-2.5 py-2 text-[12.5px] transition",
                         active

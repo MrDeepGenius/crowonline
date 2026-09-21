@@ -7,6 +7,7 @@ import {
   WalletBalanceCards,
   WithdrawalRulesCard,
 } from "@/components/wallet/wallet-balance";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getWalletOverview } from "@/server/services/wallet";
 
@@ -14,7 +15,7 @@ export const metadata = { title: "Wallet" };
 
 export default async function WalletPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const overview = await getWalletOverview(user.id);
 

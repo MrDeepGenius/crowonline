@@ -18,6 +18,8 @@ import {
 import { PRODUCT_CATEGORIES, PRODUCT_TYPES } from "@/lib/domain";
 import { cn } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Marketplace",
   description:

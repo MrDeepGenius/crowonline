@@ -1,6 +1,7 @@
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { LoginForm } from "@/components/auth/login-form";
 import { getSession } from "@/lib/auth/session";
+import { isGoogleConfigured } from "@/lib/auth/google";
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "Iniciar sesión" };
@@ -28,7 +29,7 @@ export default async function LoginPage({
         </div>
       }
     >
-      <LoginForm next={next} />
+      <LoginForm next={next} googleEnabled={isGoogleConfigured()} />
     </AuthLayout>
   );
 }

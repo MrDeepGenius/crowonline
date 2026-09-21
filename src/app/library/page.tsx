@@ -7,6 +7,7 @@ import {
 } from "@/components/library/library-panels";
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listCertificates, listLibrary } from "@/server/services/learning";
 import { listBuyerOrders } from "@/server/services/orders";
@@ -15,7 +16,7 @@ export const metadata = { title: "Mi biblioteca" };
 
 export default async function LibraryPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [enrollments, orders, certificates] = await Promise.all([
     listLibrary(user.id),

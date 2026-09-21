@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, StatCard } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCreatorMetrics, listCreatorProducts } from "@/server/services/catalog";
 import { getPlanUsage } from "@/server/services/creator";
@@ -12,7 +13,7 @@ export const metadata = { title: "Creator" };
 
 export default async function CreatorHomePage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [metrics, usage, products] = await Promise.all([
     getCreatorMetrics(user.id),

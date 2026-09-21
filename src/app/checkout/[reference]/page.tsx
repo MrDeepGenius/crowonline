@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { PRODUCT_TYPE_LABEL } from "@/lib/plans";
 import { getCurrentUser } from "@/lib/auth/session";
 import { cancelOrderAction } from "@/server/actions/payments";
+
+export const dynamic = "force-dynamic";
 import { confirmLocalTestPaymentAction } from "@/server/actions/test-payments";
 import { paymentsTestModeEnabled, TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
 import { TestnetPayment } from "@/components/checkout/testnet-payment";

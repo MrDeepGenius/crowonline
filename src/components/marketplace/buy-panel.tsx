@@ -29,7 +29,7 @@ export function BuyPanel({
   );
 
   return (
-    <div className="mp-card mp-card-hover sticky top-24 rounded-2xl p-6">
+    <div className="mp-card mp-card-hover rounded-2xl p-5 sm:p-6 lg:sticky lg:top-24">
       <div className="flex items-end justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-crow-muted">

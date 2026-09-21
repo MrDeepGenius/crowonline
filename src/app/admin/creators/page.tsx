@@ -5,6 +5,8 @@ import { listCreatorsForAdmin } from "@/server/services/admin";
 import { getCreatorPlan } from "@/lib/plans";
 import { formatDate, formatUsdt } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Creators" };
 
 export default async function AdminCreatorsPage() {

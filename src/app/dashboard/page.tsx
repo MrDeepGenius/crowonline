@@ -5,6 +5,7 @@ import { CreatorPanel } from "@/components/dashboard/creator-panel";
 import { Badge } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hasRole } from "@/lib/rbac";
 import { ROLE_LABEL, type Role } from "@/lib/domain";
@@ -18,7 +19,7 @@ export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const roles = user.roleList as Role[];
   const isCreator = hasRole(roles, "CREATOR");

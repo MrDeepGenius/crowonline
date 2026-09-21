@@ -2,6 +2,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { CommissionTable } from "@/components/affiliate/commission-table";
 import { AffiliateStats } from "@/components/affiliate/affiliate-stats";
 import { ButtonLink } from "@/components/ui/button";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAffiliateOverview } from "@/server/services/affiliate";
 
@@ -9,7 +10,7 @@ export const metadata = { title: "Ventas de afiliado" };
 
 export default async function AffiliateSalesPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const overview = await getAffiliateOverview(user.id);
 

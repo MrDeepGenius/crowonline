@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { SidebarNav } from "@/components/layout/dashboard-nav";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { SiteFooter } from "@/components/layout/site-chrome";
 import { logoutAction } from "@/lib/auth/actions";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -50,6 +51,7 @@ export async function DashboardShell({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="flex flex-1">
+        {/* Desktop sidebar — hidden on mobile */}
         <aside className="sticky top-0 hidden h-screen w-[248px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0A0A0C]/80 px-4 py-6 lg:flex">
           <Link href="/" className="px-2">
             <span className="text-sm font-semibold tracking-[0.2em] text-crow-text">
@@ -80,8 +82,14 @@ export async function DashboardShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0B0B0B]/85 backdrop-blur-xl">
-            <div className="flex h-16 items-center justify-between gap-4 px-5 sm:px-8">
+            <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-8">
               <div className="flex min-w-0 items-center gap-3">
+                {/* Mobile hamburger — rendered as a Client Component */}
+                <MobileNav
+                  sections={sections}
+                  activePath={activePath}
+                  balanceFormatted={formatUsdt(balance)}
+                />
                 <Link href="/" className="lg:hidden">
                   <span className="text-sm font-semibold tracking-[0.18em]">CROW</span>
                 </Link>
@@ -94,7 +102,7 @@ export async function DashboardShell({
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2">
                 <Link
                   href="/marketplace"
                   className="hidden text-[13px] text-crow-muted transition hover:text-crow-text sm:block"
@@ -102,11 +110,11 @@ export async function DashboardShell({
                   Marketplace
                 </Link>
                 {hasRole(roles, "CREATOR") ? (
-                  <Link href="/creator/studio" className={buttonClass("primary", "sm")}>
+                  <Link href="/creator/studio" className={cn(buttonClass("primary", "sm"), "hidden sm:inline-flex")}>
                     Creator Studio
                   </Link>
                 ) : null}
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-crow-violet/30 bg-crow-violet/15 text-[12px] font-semibold text-crow-glow">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-crow-violet/30 bg-crow-violet/15 text-[12px] font-semibold text-crow-glow">
                   {initials(user.name)}
                 </span>
                 <form action={logoutAction}>
@@ -121,17 +129,17 @@ export async function DashboardShell({
             </div>
           </header>
 
-          <main className="flex-1 px-5 py-8 sm:px-8">
-            <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <main className="flex-1 px-4 py-6 sm:px-8 sm:py-8">
+            <div className="mb-6 flex flex-col gap-3 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
                 {description ? (
                   <p className="mt-1.5 max-w-2xl text-sm text-crow-muted">
                     {description}
                   </p>
                 ) : null}
               </div>
-              {action}
+              {action ? <div className="shrink-0">{action}</div> : null}
             </div>
             {children}
           </main>

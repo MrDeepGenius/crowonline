@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 
 import { ErrorBox, FieldError } from "@/components/auth/auth-fields";
+import { GoogleOAuthButton } from "@/components/auth/google-oauth-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { registerAction } from "@/lib/auth/actions";
@@ -23,9 +24,11 @@ const ROLE_HINT: Record<Role, string> = {
 export function RegisterForm({
   defaultPlan,
   referralCode,
+  googleEnabled = true,
 }: {
   defaultPlan?: string;
   referralCode?: string;
+  googleEnabled?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(registerAction, initialActionState);
   const [selected, setSelected] = useState<Role[]>(["CREATOR", "AFFILIATE"]);
@@ -117,6 +120,21 @@ export function RegisterForm({
       {defaultPlan ? <input type="hidden" name="plan" value={defaultPlan} /> : null}
 
       <ErrorBox message={state.message} />
+
+      {googleEnabled && (
+        <>
+          <GoogleOAuthButton
+            ref={referralCode}
+            roles={selected.join(",")}
+            label="Registrarme con Google"
+          />
+          <div className="flex items-center gap-3">
+            <span className="h-px flex-1 bg-white/[0.08]" />
+            <span className="text-[11px] text-crow-muted">o con email</span>
+            <span className="h-px flex-1 bg-white/[0.08]" />
+          </div>
+        </>
+      )}
 
       <Button type="submit" className="w-full" disabled={pending}>
         {pending ? "Creando tu cuenta…" : "Crear mi cuenta gratis →"}

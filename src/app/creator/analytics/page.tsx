@@ -3,6 +3,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { ProgressBar } from "@/components/ui/badge";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader, StatCard } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCreatorMetrics } from "@/server/services/catalog";
 import { PRODUCT_TYPE_LABEL } from "@/lib/plans";
@@ -13,7 +14,7 @@ export const metadata = { title: "Analytics" };
 
 export default async function CreatorAnalyticsPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const metrics = await getCreatorMetrics(user.id);
 

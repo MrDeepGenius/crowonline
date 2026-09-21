@@ -4,6 +4,7 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Badge, ProgressBar } from "@/components/ui/badge";
 import { ButtonLink, buttonClass } from "@/components/ui/button";
 import { Card, EmptyState } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { listCreatorProducts } from "@/server/services/catalog";
 import { getPlanUsage } from "@/server/services/creator";
@@ -22,7 +23,7 @@ export default async function CreatorProductsPage({ searchParams }: {
 }) {
   const { boostError } = await searchParams;
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [products, usage] = await Promise.all([
     listCreatorProducts(user.id),

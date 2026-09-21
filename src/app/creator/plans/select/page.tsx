@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getPlanUsage } from "@/server/services/creator";
 import { selectCreatorPlanAction } from "@/server/actions/creator-edit";
@@ -15,7 +16,7 @@ export default async function PlanSelectPage({
   searchParams: Promise<{ plan?: string }>;
 }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const usage = await getPlanUsage(user.id);
   const requested = CREATOR_PLANS.find((plan) => plan.id === params.plan) ?? usage.plan;

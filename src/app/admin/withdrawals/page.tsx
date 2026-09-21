@@ -6,6 +6,8 @@ import { listWithdrawalsForAdmin } from "@/server/services/withdrawal-review";
 import { formatUsdt } from "@/lib/utils";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Retiros" };
 
 const FILTERS = ["all", "PENDING", "APPROVED", "PAID", "REJECTED"] as const;

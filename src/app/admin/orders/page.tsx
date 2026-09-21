@@ -5,6 +5,8 @@ import { listOrdersForAdmin } from "@/server/services/settlement";
 import { formatUsdt } from "@/lib/utils";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Órdenes" };
 
 const FILTERS = ["all", "PAID", "PENDING", "EXPIRED", "FAILED"] as const;

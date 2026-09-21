@@ -25,11 +25,30 @@ type TabId = (typeof TABS)[number]["id"];
 export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) {
   const studio = useStudio(initialIdea);
   const [tab, setTab] = useState<TabId>("brief");
+  const [mobilePanel, setMobilePanel] = useState<"chat" | "blueprint">("chat");
   const { blueprint } = studio;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
-      <div className="xl:sticky xl:top-24 xl:h-[calc(100vh-7.5rem)]">
+      {/* Mobile panel switcher */}
+      <div className="flex rounded-xl border border-white/[0.06] bg-white/[0.02] p-1 xl:hidden">
+        <button
+          type="button"
+          onClick={() => setMobilePanel("chat")}
+          className={cn("flex-1 rounded-lg px-3 py-2 text-[13px] transition", mobilePanel === "chat" ? "bg-crow-violet/15 text-crow-glow" : "text-crow-muted hover:text-crow-text")}
+        >
+          Chat IA
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobilePanel("blueprint")}
+          className={cn("flex-1 rounded-lg px-3 py-2 text-[13px] transition", mobilePanel === "blueprint" ? "bg-crow-violet/15 text-crow-glow" : "text-crow-muted hover:text-crow-text")}
+        >
+          Blueprint
+        </button>
+      </div>
+
+      <div className={cn("xl:sticky xl:top-24 xl:h-[calc(100vh-7.5rem)]", mobilePanel !== "chat" ? "hidden xl:block" : "")}>
         <StudioChat
           messages={studio.messages}
           input={studio.input}
@@ -48,7 +67,7 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
         />
       </div>
 
-      <div className="space-y-5">
+      <div className={cn("space-y-5", mobilePanel !== "blueprint" ? "hidden xl:block" : "")}>
         {studio.error ? (
           <p className="rounded-xl border border-crow-danger/30 bg-crow-danger/10 px-4 py-3 text-[12.5px] text-crow-danger">
             {studio.error}

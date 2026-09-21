@@ -9,6 +9,7 @@ import { LessonImageManager } from "@/components/creator/lesson-image-manager";
 import { LessonVideoManager } from "@/components/creator/lesson-video-manager";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCreatorProduct } from "@/server/services/catalog";
 import { PRODUCT_STATUS_LABEL, type ProductStatus } from "@/lib/domain";
@@ -24,7 +25,7 @@ export default async function CreatorProductDetailPage({
   searchParams: Promise<{ saved?: string; quality?: string; lessonSaved?: string }>;
 }) {
   const [{ id }, query, user] = await Promise.all([params, searchParams, getCurrentUser()]);
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const product = await getCreatorProduct(id, user.id);
   if (!product) notFound();

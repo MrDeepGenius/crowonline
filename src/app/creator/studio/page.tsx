@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { StudioWorkspaceV2 } from "@/components/creator/studio-workspace-v2";
 import { Badge } from "@/components/ui/badge";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { providerStatus } from "@/lib/ai/providers";
 import { videoProviderStatus } from "@/lib/ai/providers/video";
@@ -15,7 +16,7 @@ export default async function CreatorStudioPage({
   searchParams: Promise<{ idea?: string; error?: string }>;
 }) {
   const [params, user] = await Promise.all([searchParams, getCurrentUser()]);
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const usage = await getPlanUsage(user.id);
   const providers = providerStatus();

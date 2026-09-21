@@ -5,6 +5,8 @@ import { listProductsForAdmin } from "@/server/services/admin";
 import { formatUsdt } from "@/lib/utils";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Productos" };
 
 const FILTERS = ["all", "PUBLISHED", "DRAFT", "ARCHIVED"] as const;

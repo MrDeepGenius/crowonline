@@ -6,6 +6,8 @@ import { ButtonLink } from "@/components/ui/button";
 import { ROLES, ROLE_LABEL } from "@/lib/domain";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Admin · Usuarios" };
 
 export default async function AdminUsersPage({

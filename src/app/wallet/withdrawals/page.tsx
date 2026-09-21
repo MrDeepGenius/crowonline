@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { WithdrawalForm } from "@/components/wallet/withdrawal-form";
 import { WithdrawalHistory } from "@/components/wallet/wallet-tables";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getWalletOverview } from "@/server/services/wallet";
 import { resolveWithdrawalFee } from "@/server/services/withdrawals";
@@ -9,7 +10,7 @@ export const metadata = { title: "Retiros" };
 
 export default async function WithdrawalsPage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [overview, monthly] = await Promise.all([
     getWalletOverview(user.id),

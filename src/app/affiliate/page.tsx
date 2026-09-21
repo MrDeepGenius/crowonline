@@ -8,6 +8,7 @@ import {
   AffiliateRulesCard,
   AffiliateNetworkSummary,
 } from "@/components/affiliate/affiliate-stats";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getAffiliateOverview } from "@/server/services/affiliate";
 import { getWalletOverview } from "@/server/services/wallet";
@@ -31,7 +32,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default async function AffiliatePage() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user) redirect("/login");
 
   const [overview, wallet] = await Promise.all([
     getAffiliateOverview(user.id),

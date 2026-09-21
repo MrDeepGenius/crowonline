@@ -3,13 +3,12 @@ import { jwtVerify } from "jose";
 
 import { canAccessPath } from "@/lib/rbac";
 import { normalizeRoles } from "@/lib/auth/roles";
+import { getSessionSecret } from "@/lib/env";
 
 const SESSION_COOKIE = "crow_session";
 
 function getSecret() {
-  const secret =
-    process.env.SESSION_SECRET ?? "crow-dev-session-secret-change-me-000";
-  return new TextEncoder().encode(secret);
+  return getSessionSecret();
 }
 
 async function readRoles(request: NextRequest) {
