@@ -103,7 +103,32 @@ export const CREATOR_PLANS: CreatorPlan[] = [
       "Early access a nuevas features",
     ],
   },
+  {
+    id: "ELITE_PLUS",
+    name: "Elite+",
+    priceUsdt: 1000,
+    productLimit: 100,
+    publishedLimit: 50,
+    durationLabel: "18 meses",
+    durationDays: 540,
+    tagline: "Tope de la red creator CROW",
+    features: [
+      "100 infoproductos",
+      "50 productos publicados",
+      "Soporte dedicado VIP",
+      "Acceso prioritario a lanzamientos",
+    ],
+  },
 ];
+
+/**
+ * Expiration date of a creator plan, calculated from its activation date.
+ * Single source of truth for duration: uses durationDays so months are
+ * expressed as 30-day periods consistently with the commercial table.
+ */
+export function planExpiryFrom(startDate: Date, durationDays: number): Date {
+  return new Date(startDate.getTime() + durationDays * 24 * 60 * 60 * 1000);
+}
 
 export function getCreatorPlan(id: string | null | undefined): CreatorPlan {
   return CREATOR_PLANS.find((plan) => plan.id === id) ?? CREATOR_PLANS[0];

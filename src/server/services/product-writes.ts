@@ -64,23 +64,44 @@ export async function createProductFromBlueprint({
                     summary: module.summary,
                     position: moduleIndex,
                     lessons: {
-                      create: module.lessons.map((lesson, lessonIndex) => ({
-                        title: lesson.title,
-                        content: lesson.content,
-                        durationMin: lesson.durationMin,
-                        imagePrompt: lesson.imagePrompt || null,
-                        videoUrl: lesson.videoUrl || null,
-                        isFreePreview: lesson.isFreePreview,
-                        position: lessonIndex,
-                        exercises: {
-                          create: lesson.exercises.map((exercise, exerciseIndex) => ({
-                            title: exercise.title,
-                            instructions: exercise.instructions,
-                            kind: exercise.kind,
-                            position: exerciseIndex,
-                          })),
-                        },
-                      })),
+                      create: module.lessons.map((lesson, lessonIndex) => {
+                        const ms = (lesson as unknown as { mediaSpec?: unknown; mediaSvg?: string; mediaVisualPrompt?: string }).mediaSpec;
+                        const svg = (lesson as unknown as { mediaSpec?: unknown; mediaSvg?: string; mediaVisualPrompt?: string }).mediaSvg;
+                        const mvp = (lesson as unknown as { mediaSpec?: unknown; mediaSvg?: string; mediaVisualPrompt?: string }).mediaVisualPrompt;
+                        const mType = ms && typeof ms === "object" && "type" in (ms as Record<string, unknown>) ? String((ms as Record<string, unknown>).type) : null;
+                        return {
+                          title: lesson.title,
+                          content: lesson.content,
+                          durationMin: lesson.durationMin,
+                          imagePrompt: lesson.imagePrompt || null,
+                          videoUrl: lesson.videoUrl || null,
+                          videoEnabled: lesson.videoEnabled ?? false,
+                          videoRequired: lesson.videoRequired ?? false,
+                          videoPrompt: lesson.videoPrompt || null,
+                          videoDuration: lesson.videoDuration ?? 5,
+                          videoStyle: lesson.videoStyle || "cinematic",
+                          videoGenerationStatus: lesson.videoEnabled ? "PENDING" : null,
+                          videoSource: lesson.videoUrl ? "CREATOR" : null,
+                          isFreePreview: lesson.isFreePreview,
+                          position: lessonIndex,
+                          // Media Quality Engine
+                          mediaType: mType,
+                          mediaSpec: ms ? JSON.stringify(ms) : null,
+                          mediaSvg: svg || null,
+                          mediaVisualPrompt: mvp || null,
+                          exercises: {
+                            create: lesson.exercises.map((exercise, exerciseIndex) => ({
+                              title: exercise.title,
+                              instructions: exercise.instructions,
+                              kind: exercise.kind,
+                              position: exerciseIndex,
+                              options: JSON.stringify(exercise.options ?? []),
+                              correctAnswer: exercise.correctAnswer ?? "",
+                              explanation: exercise.explanation ?? "",
+                            })),
+                          },
+                        };
+                      }),
                     },
                   })),
                 },
@@ -94,6 +115,26 @@ export async function createProductFromBlueprint({
     await prisma.blueprint.updateMany({
       where: { id: blueprintId, userId: creatorId },
       data: { productId: product.id },
+    });
+  }
+
+  // Persist blueprint.resources as Resource records (skip if already exist)
+  if (blueprint.resources.length > 0) {
+    const kindFor = (title: string): string => {
+      const lower = title.toLowerCase();
+      if (lower.includes("checklist")) return "CHECKLIST";
+      if (lower.includes("plantilla") || lower.includes("template")) return "TEMPLATE";
+      if (lower.includes("guía") || lower.includes("guide")) return "GUIDE";
+      if (lower.includes("glosario") || lower.includes("glossary")) return "GLOSSARY";
+      return "TOOL";
+    };
+    await prisma.resource.createMany({
+      data: blueprint.resources.map((title) => ({
+        productId: product.id,
+        title,
+        content: title,
+        kind: kindFor(title),
+      })),
     });
   }
 
@@ -186,6 +227,11 @@ export async function updateLessonContent({
     content?: string;
     durationMin?: number;
     videoUrl?: string | null;
+    videoEnabled?: boolean;
+    videoRequired?: boolean;
+    videoPrompt?: string | null;
+    videoDuration?: number | null;
+    videoStyle?: string | null;
     isFreePreview?: boolean;
   };
 }) {

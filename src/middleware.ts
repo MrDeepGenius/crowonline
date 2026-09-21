@@ -43,6 +43,19 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Referral durability: any marketplace visit carrying ?ref=CODE (shared
+  // product links, campaign URLs) persists the code in a cookie, so the sale is
+  // still attributed when the buyer returns later without the query param.
+  const refCode = request.nextUrl.searchParams.get("ref");
+  if (refCode && pathname.startsWith("/marketplace")) {
+    const response = NextResponse.next();
+    response.cookies.set("crow_ref", refCode, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+    return response;
+  }
+
   const session = await readRoles(request);
 
   if (!session && !pathname.startsWith("/login") && !pathname.startsWith("/register")) {
@@ -76,6 +89,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/r/:path*",
+    "/marketplace/:path*",
     "/dashboard/:path*",
     "/creator/:path*",
     "/affiliate/:path*",

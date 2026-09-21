@@ -97,6 +97,7 @@ export function MarketplaceFilters({
             className="lg:w-44"
           >
             <option value="recent">Más recientes</option>
+            <option value="sales">Más vendidos</option>
             <option value="rating">Mejor valorados</option>
             <option value="price-asc">Precio: menor</option>
             <option value="price-desc">Precio: mayor</option>
@@ -109,10 +110,8 @@ export function MarketplaceFilters({
           type="button"
           onClick={() => pushParams({ category: null })}
           className={cn(
-            "rounded-full border px-3.5 py-1.5 text-[12.5px] transition",
-            activeCategory === "all"
-              ? "border-crow-violet/50 bg-crow-violet/15 text-crow-glow"
-              : "border-white/[0.08] bg-white/[0.02] text-crow-muted hover:text-crow-text",
+            "mp-chip rounded-full px-3.5 py-1.5 text-[12.5px]",
+            activeCategory === "all" ? "mp-chip-active" : "text-crow-muted",
           )}
         >
           Todas ({total})
@@ -126,10 +125,8 @@ export function MarketplaceFilters({
               type="button"
               onClick={() => pushParams({ category })}
               className={cn(
-                "rounded-full border px-3.5 py-1.5 text-[12.5px] transition",
-                activeCategory === category
-                  ? "border-crow-violet/50 bg-crow-violet/15 text-crow-glow"
-                  : "border-white/[0.08] bg-white/[0.02] text-crow-muted hover:text-crow-text",
+                "mp-chip rounded-full px-3.5 py-1.5 text-[12.5px]",
+                activeCategory === category ? "mp-chip-active" : "text-crow-muted",
               )}
             >
               {category} ({facet.count})

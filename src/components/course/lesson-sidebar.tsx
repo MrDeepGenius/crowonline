@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type Lesson = { id: string; title: string; durationMin: number };
-type Module = { id: string; title: string; lessons: Lesson[] };
+type Module = { id: string; title: string; summary?: string | null; imageUrl?: string | null; lessons: Lesson[] };
 
 export function LessonSidebar({
   productSlug,
@@ -53,6 +53,13 @@ export function LessonSidebar({
       <Card className="max-h-[70vh] overflow-y-auto p-3">
         {modules.map((module, moduleIndex) => (
           <div key={module.id} className="mb-3 last:mb-0">
+            {/* Module header with optional image */}
+            {module.imageUrl ? (
+              <div className="mb-2 overflow-hidden rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={module.imageUrl} alt={module.title} className="h-20 w-full object-cover opacity-80" loading="lazy" />
+              </div>
+            ) : null}
             <p className="px-2 py-1.5 text-[11px] uppercase tracking-wider text-crow-muted">
               Módulo {moduleIndex + 1} · {module.title}
             </p>

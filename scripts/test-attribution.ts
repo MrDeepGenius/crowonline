@@ -10,11 +10,19 @@
  * TEST 5 ?ref= at registration survives until purchase
  * TEST 6 double PAID -> commissions once (idempotent)
  */
+import { mockBlockchain } from "./helpers/mock-blockchain";
 import prisma from "@/lib/db";
 import { computeSplit } from "@/lib/commissions";
 import { ensureAffiliate, registerReferral } from "@/server/services/affiliate";
 import { createOrderWithPayment, resolveSaleAttribution } from "@/server/services/orders";
-import { confirmOrderPayment } from "@/server/services/settlement";
+import { confirmOrderPayment as verifyOrderPayment } from "@/server/services/settlement";
+const blockchain = mockBlockchain();
+async function confirmOrderPayment({ orderId }: { orderId: string }) {
+  const payment = await prisma.payment.findUniqueOrThrow({ where: { orderId } });
+  const txHash = payment.txHash ?? blockchain.mine(payment).hash;
+  blockchain.state.head += 3;
+  return verifyOrderPayment({ orderId, txHash });
+}
 import { distributeCommissions } from "@/server/services/distribution";
 import { ensureWallet, getWalletOverview } from "@/server/services/wallet";
 
@@ -82,14 +90,14 @@ async function unitTests() {
     "CROW 10% fijo (no absorbe residual)",
   );
   assert(
-    approx(full.lines.find((l) => l.role === "REWARDS_POOL")!.amount, 2),
+    approx(full.lines.find((l) => l.role === "EMERGENCY_RESERVE" && l.level === undefined)!.amount, 2),
     "Rewards Pool 2% explicito dentro del split",
   );
   assert(approx(full.totalAmount, 100), "distribucion total = 100%");
   const solo = computeSplit({ amount: 100, creatorId: "U-CREATOR", affiliateUpline: [] });
   assert(
     approx(solo.lines.find((l) => l.role === "CREATOR")!.amount, 45) &&
-      approx(solo.lines.find((l) => l.role === "REWARDS_POOL")!.amount, 2) &&
+      approx(solo.lines.find((l) => l.role === "EMERGENCY_RESERVE" && l.level === undefined)!.amount, 2) &&
       approx(solo.lines.find((l) => l.role === "PLATFORM")!.amount, 10) &&
       approx(sumRole(solo.lines, "CROW_TREASURY"), 43) &&
       approx(solo.totalAmount, 100),
@@ -174,10 +182,10 @@ async function test5to6(fx: Fx) {
     assert(res1.snapshot.some((line) => line.role === role && line.userId === user.id && approx(line.amount, amount)), `${role} cobra ${amount}% al beneficiario correcto`);
   }
   assert(approx(sumRole(res1.snapshot, "DIRECT_AFFILIATE"), 30), "afiliado X recibe 30");
-  assert(approx(sumRole(res1.snapshot, "REWARDS_POOL"), 2), "Rewards Pool recibe 2");
+  assert(approx(sumRole(res1.snapshot, "EMERGENCY_RESERVE"), 4.5), "Reserva permanente 2 + apertura 2.5 = 4.5");
   assert(
     approx(sumRole(res1.snapshot, "L1"), 2.5) &&
-      approx(sumRole(res1.snapshot, "EMERGENCY_RESERVE"), 2.5),
+      approx(sumRole(res1.snapshot, "EMERGENCY_RESERVE"), 4.5),
     "primer desbloqueo L1: L1 2.5 + reserva 2.5 (excepcion documentada)",
   );
   assert(approx(sumRole(res1.snapshot, "L2"), 3), "L2 recibe 3");
@@ -243,7 +251,7 @@ async function test3to4(fx: Fx) {
   const res2 = await confirmOrderPayment({ orderId: order2.orderId });
   assert(res2.snapshot.every((l) => l.role !== "DIRECT_AFFILIATE"), "sin comision de afiliado");
   assert(approx(sumRole(res2.snapshot, "CREATOR"), 45), "creator 45 en venta directa");
-  assert(approx(sumRole(res2.snapshot, "REWARDS_POOL"), 2), "Rewards Pool 2% en venta directa");
+  assert(approx(sumRole(res2.snapshot, "EMERGENCY_RESERVE"), 2), "Reserva permanente 2% en venta directa");
   assert(
     approx(sumRole(res2.snapshot, "PLATFORM"), 10) && approx(sumRole(res2.snapshot, "CROW_TREASURY"), 43),
     "CROW base 10% y Treasury 43% separados en venta directa",

@@ -1,0 +1,365 @@
+﻿MODEL User
+  id String @id
+  email String
+  passwordHash String
+  name String
+  roles String
+  status String
+  country String ?
+  avatarSeed String ?
+  createdAt DateTime
+  updatedAt DateTime
+  profile Profile ?
+  wallet Wallet ?
+  affiliate Affiliate ?
+  creatorPlan CreatorSubscription ?
+  products Product[]
+  orders Order[]
+  payments Payment[]
+  reviews Review[]
+  certificates Certificate[]
+  enrollments Enrollment[]
+  lessonProgress LessonProgress[]
+  commissions Commission[]
+  referrals Referral[]
+  clickEvents ReferralEvent[]
+  withdrawals Withdrawal[]
+  blueprints Blueprint[]
+  publishedBy ProductPublication[]
+MODEL Profile
+  id String @id
+  userId String
+  headline String ?
+  bio String ?
+  website String ?
+  socialX String ?
+  socialIg String ?
+  createdAt DateTime
+  updatedAt DateTime
+  user User
+MODEL CreatorSubscription
+  id String @id
+  userId String
+  plan String
+  status String
+  priceUsdt Float
+  productLimit Int
+  publishedLimit Int
+  startedAt DateTime
+  expiresAt DateTime ?
+  createdAt DateTime
+  updatedAt DateTime
+  user User
+MODEL Product
+  id String @id
+  creatorId String
+  slug String
+  title String
+  shortDescription String
+  description String
+  type String
+  category String
+  priceUsdt Float
+  compareAtUsdt Float ?
+  coverGradient String
+  coverEmoji String
+  tags String
+  includes String
+  previewContent String ?
+  status String
+  qualityScore Int
+  ratingAvg Float
+  ratingCount Int
+  salesCount Int
+  revenueUsdt Float
+  blueprintId String ?
+  createdAt DateTime
+  updatedAt DateTime
+  creator User
+  publication ProductPublication ?
+  course Course ?
+  reviews Review[]
+  orderItems OrderItem[]
+  commissions Commission[]
+  enrollments Enrollment[]
+  certificates Certificate[]
+MODEL ProductPublication
+  id String @id
+  productId String
+  actorId String ?
+  slug String
+  visibility String
+  publishedAt DateTime
+  revenueShare String
+  createdAt DateTime
+  product Product
+  actor User ?
+MODEL Course
+  id String @id
+  productId String
+  level String
+  language String
+  durationMin Int
+  certificateEnabled Boolean
+  learningGoals String
+  createdAt DateTime
+  updatedAt DateTime
+  product Product
+  modules Module[]
+MODEL Module
+  id String @id
+  courseId String
+  title String
+  summary String ?
+  position Int
+  createdAt DateTime
+  course Course
+  lessons Lesson[]
+MODEL Lesson
+  id String @id
+  moduleId String
+  title String
+  content String
+  videoUrl String ?
+  imageUrl String ?
+  imagePrompt String ?
+  durationMin Int
+  position Int
+  isFreePreview Boolean
+  createdAt DateTime
+  module Module
+  exercises Exercise[]
+  progress LessonProgress[]
+MODEL Exercise
+  id String @id
+  lessonId String
+  title String
+  instructions String
+  kind String
+  position Int
+  lesson Lesson
+MODEL Resource
+  id String @id
+  productId String
+  lessonId String ?
+  title String
+  url String ?
+  kind String
+  createdAt DateTime
+MODEL Enrollment
+  id String @id
+  userId String
+  productId String
+  progressPct Int
+  completedAt DateTime ?
+  createdAt DateTime
+  user User
+  product Product
+  progress LessonProgress[]
+MODEL LessonProgress
+  id String @id
+  userId String
+  lessonId String
+  enrollmentId String ?
+  completed Boolean
+  completedAt DateTime ?
+  createdAt DateTime
+  user User
+  lesson Lesson
+  enrollment Enrollment ?
+MODEL Certificate
+  id String @id
+  serial String
+  userId String
+  productId String
+  creatorId String
+  studentName String
+  courseTitle String
+  creatorName String
+  issuedAt DateTime
+  user User
+  product Product
+MODEL Review
+  id String @id
+  productId String
+  userId String
+  rating Int
+  comment String
+  createdAt DateTime
+  product Product
+  user User
+MODEL Order
+  id String @id
+  reference String
+  buyerId String
+  status String
+  subtotalUsdt Float
+  totalUsdt Float
+  currency String
+  affiliateId String ?
+  referralCode String ?
+  paidAt DateTime ?
+  expiresAt DateTime ?
+  createdAt DateTime
+  updatedAt DateTime
+  buyer User
+  items OrderItem[]
+  payment Payment ?
+  commissionSnapshot String
+MODEL OrderItem
+  id String @id
+  orderId String
+  productId String
+  title String
+  priceUsdt Float
+  creatorId String
+  order Order
+  product Product
+MODEL Payment
+  id String @id
+  orderId String
+  userId String
+  provider String
+  network String
+  address String
+  amountUsdt Float
+  status String
+  txHash String ?
+  confirmations Int
+  requiredConfirmations Int
+  expiresAt DateTime ?
+  confirmedAt DateTime ?
+  raw String ?
+  createdAt DateTime
+  updatedAt DateTime
+  order Order
+  user User
+MODEL Transaction
+  id String @id
+  reference String
+  kind String
+  status String
+  amountUsdt Float
+  currency String
+  userId String ?
+  orderId String ?
+  metadata String
+  createdAt DateTime
+MODEL Affiliate
+  id String @id
+  userId String
+  referralCode String
+  tier String
+  status String
+  clicks Int
+  conversions Int
+  totalSalesUsdt Float
+  totalCommissionUsdt Float
+  crowPoints Float
+  level1Unlocked Boolean
+  emergencyReserveUsdt Float
+  parentAffiliateId String ?
+  createdAt DateTime
+  updatedAt DateTime
+  user User
+  referrals Referral[]
+  events ReferralEvent[]
+  commissions Commission[]
+MODEL Referral
+  id String @id
+  affiliateId String
+  referredUserId String ?
+  invitedEmail String ?
+  code String
+  level Int
+  createdAt DateTime
+  affiliate Affiliate
+  owner User ?
+MODEL ReferralEvent
+  id String @id
+  affiliateId String ?
+  userId String ?
+  code String
+  kind String
+  productId String ?
+  metadata String
+  createdAt DateTime
+  affiliate Affiliate ?
+  user User ?
+MODEL Commission
+  id String @id
+  orderId String
+  productId String
+  affiliateId String ?
+  earnerId String
+  role String
+  level Int ?
+  rate Float
+  amountUsdt Float
+  status String
+  reference String
+  createdAt DateTime
+  earner User
+  product Product
+  affiliate Affiliate ?
+MODEL Wallet
+  id String @id
+  userId String
+  currency String
+  availableUsdt Float
+  pendingUsdt Float
+  totalEarnedUsdt Float
+  totalWithdrawnUsdt Float
+  createdAt DateTime
+  updatedAt DateTime
+  user User
+  transactions WalletTransaction[]
+  withdrawals Withdrawal[]
+MODEL WalletTransaction
+  id String @id
+  walletId String
+  userId String
+  type String
+  direction String
+  amountUsdt Float
+  balanceAfterUsdt Float
+  status String
+  reference String
+  description String
+  orderId String ?
+  createdAt DateTime
+  wallet Wallet
+MODEL Withdrawal
+  id String @id
+  reference String
+  userId String
+  walletId String
+  amountUsdt Float
+  feeRate Float
+  feeUsdt Float
+  netUsdt Float
+  method String
+  address String
+  status String
+  note String ?
+  adminNote String ?
+  reviewedById String ?
+  txHash String ?
+  requestedAt DateTime
+  reviewedAt DateTime ?
+  paidAt DateTime ?
+  user User
+  wallet Wallet
+MODEL Blueprint
+  id String @id
+  userId String
+  idea String
+  title String
+  productType String
+  status String
+  provider String
+  data String
+  productId String ?
+  createdAt DateTime
+  updatedAt DateTime
+  user User

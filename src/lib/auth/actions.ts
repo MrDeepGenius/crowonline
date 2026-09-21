@@ -15,7 +15,7 @@ import {
 import { loginSchema, registerSchema, type ActionState } from "@/lib/validation";
 import { ensureWallet } from "@/server/services/wallet";
 import { ensureAffiliate, findAffiliateByCode, registerReferral } from "@/server/services/affiliate";
-import { getCreatorPlan } from "@/lib/plans";
+import { getCreatorPlan, planExpiryFrom } from "@/lib/plans";
 import { primaryRole } from "@/lib/rbac";
 
 function redirectFor(roles: string[]) {
@@ -78,7 +78,7 @@ export async function registerAction(
         priceUsdt: plan.priceUsdt,
         productLimit: plan.productLimit,
         publishedLimit: plan.publishedLimit,
-        expiresAt: new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000),
+        expiresAt: planExpiryFrom(new Date(), plan.durationDays),
       },
     });
   }
@@ -96,6 +96,11 @@ export async function registerAction(
         code: affiliate.referralCode,
       },
     });
+  } else if (referralCode) {
+    // Bug fix: durable attribution for buyers (and any non-affiliate role).
+    // Previously the referral code was discarded unless the account registered
+    // as AFFILIATE, so the sale of a referred buyer was never attributed.
+    await registerReferral(referralCode, user.id);
   }
 
   await setSessionCookie({

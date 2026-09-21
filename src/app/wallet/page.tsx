@@ -27,6 +27,7 @@ export default async function WalletPage() {
         <ButtonLink href="/wallet/withdrawals">Solicitar retiro</ButtonLink>
       }
     >
+      {overview.transactions.some((entry) => entry.status === "TEST") ? <p className="mb-5 rounded-xl border border-crow-warn p-4 text-crow-warn">TEST MODE · Los movimientos TEST son simulados. No forman parte del saldo disponible ni se pueden retirar.</p> : null}
       <WalletBalanceCards
         available={overview.wallet.availableUsdt}
         pending={overview.wallet.pendingUsdt}

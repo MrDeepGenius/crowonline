@@ -35,7 +35,7 @@ export function AdminOrderTable({ orders }: { orders: AdminOrder[] }) {
               <th className="py-2">Fecha</th>
               <th className="py-2">Estado</th>
               <th className="py-2 text-right">Total</th>
-              <th className="py-2 text-right">Confirmación dev</th>
+              <th className="py-2 text-right">Confirmación blockchain</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.05]">
@@ -73,8 +73,9 @@ export function AdminOrderTable({ orders }: { orders: AdminOrder[] }) {
                   {order.status === "PENDING" ? (
                     <form action={confirmPaymentAdminAction}>
                       <input type="hidden" name="orderId" value={order.id} />
+                      <input name="txHash" placeholder="TX hash (0x…)" className="bg-black/30 p-2" />
                       <Button type="submit" size="sm" variant="secondary">
-                        Confirmar PAID
+                        Verificar por RPC
                       </Button>
                     </form>
                   ) : (

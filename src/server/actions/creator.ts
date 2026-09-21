@@ -38,7 +38,7 @@ export async function saveStudioDraftAction(formData: FormData) {
     userId: user.id,
     idea,
     blueprint,
-    provider: String(formData.get("provider") ?? "crow-demo"),
+    provider: String(formData.get("provider") ?? "crow-skeleton"),
     blueprintId,
   });
 

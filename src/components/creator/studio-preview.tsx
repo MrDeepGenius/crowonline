@@ -21,6 +21,7 @@ export function StudioPreview({
   productStatus,
   onMaterialize,
   onPublish,
+  onBlueprintChange,
 }: {
   blueprint: ProductBlueprint;
   format: string;
@@ -30,11 +31,34 @@ export function StudioPreview({
   productStatus: string | null;
   onMaterialize: () => void;
   onPublish: () => void;
+  onBlueprintChange?: (next: ProductBlueprint) => void;
 }) {
   const stats = blueprintStats(blueprint);
   const quality = qualityCheck(blueprint);
   const firstLesson = blueprint.modules[0]?.lessons[0];
   const published = productStatus === "PUBLISHED";
+  const videoCount = blueprint.modules.flatMap((m) => m.lessons).filter((l) => l.videoEnabled).length;
+  const totalLessons = stats.lessons;
+
+  function setAllVideos(enabled: boolean) {
+    onBlueprintChange?.({
+      ...blueprint,
+      modules: blueprint.modules.map((m) => ({
+        ...m,
+        lessons: m.lessons.map((l) => ({ ...l, videoEnabled: enabled })),
+      })),
+    });
+  }
+
+  function setVideoDefaults(duration: number, style: string) {
+    onBlueprintChange?.({
+      ...blueprint,
+      modules: blueprint.modules.map((m) => ({
+        ...m,
+        lessons: m.lessons.map((l) => ({ ...l, videoDuration: duration, videoStyle: style })),
+      })),
+    });
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -83,7 +107,61 @@ export function StudioPreview({
         <span>{stats.lessons} lecciones</span>
         <span>{stats.exercises} ejercicios</span>
         <span>~{Math.round(stats.durationMin / 60)}h de contenido</span>
+        <span>🎥 {videoCount} videos recomendados</span>
       </div>
+
+      {/* Video controls — creator decides before generating (§8, §9) */}
+      {onBlueprintChange && !productId ? (
+        <div className="mt-4 rounded-xl border border-crow-violet/20 bg-crow-violet/5 p-4">
+          <p className="text-[12px] font-semibold text-crow-text">
+            🎥 Videos — este producto generará {videoCount} video{videoCount === 1 ? "" : "s"} de {totalLessons} lecciones
+          </p>
+          <p className="mt-1 text-[11px] text-crow-muted">
+            Solo se generan cuando confirmás la creación. Podés cambiarlo lección por lección en “Estructura”.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setAllVideos(true)}
+              className="rounded-lg border border-white/[0.08] px-3 py-1.5 text-[11.5px] text-crow-text transition hover:bg-white/[0.06]"
+            >
+              Todas las lecciones
+            </button>
+            <button
+              type="button"
+              onClick={() => setAllVideos(false)}
+              className="rounded-lg border border-white/[0.08] px-3 py-1.5 text-[11.5px] text-crow-text transition hover:bg-white/[0.06]"
+            >
+              Sin videos
+            </button>
+            <label className="ml-1 flex items-center gap-1.5 text-[11.5px] text-crow-muted">
+              Duración
+              <select
+                value={blueprint.modules[0]?.lessons[0]?.videoDuration ?? 5}
+                onChange={(e) => setVideoDefaults(Number(e.target.value), blueprint.modules[0]?.lessons[0]?.videoStyle ?? "cinematic")}
+                className="rounded-lg border border-white/[0.08] bg-black/40 px-2 py-1.5 text-[11.5px] text-crow-text"
+              >
+                <option value={5}>5s</option>
+                <option value={8}>8s</option>
+                <option value={10}>10s</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1.5 text-[11.5px] text-crow-muted">
+              Estilo
+              <select
+                value={blueprint.modules[0]?.lessons[0]?.videoStyle ?? "cinematic"}
+                onChange={(e) => setVideoDefaults(blueprint.modules[0]?.lessons[0]?.videoDuration ?? 5, e.target.value)}
+                className="rounded-lg border border-white/[0.08] bg-black/40 px-2 py-1.5 text-[11.5px] text-crow-text"
+              >
+                <option value="cinematic">Cinemático</option>
+                <option value="documentary">Documental</option>
+                <option value="tutorial">Tutorial</option>
+                <option value="minimal">Minimalista</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-4 space-y-2.5">
         {blueprint.modules.slice(0, 5).map((module, moduleIndex) => (
@@ -105,6 +183,9 @@ export function StudioPreview({
                   <span className="text-crow-text">
                     {moduleIndex + 1}.{lessonIndex + 1} {lesson.title}
                   </span>
+                  {lesson.videoEnabled ? (
+                    <span className="ml-2 text-[10.5px]" title="Video recomendado">🎥</span>
+                  ) : null}
                   {lesson.exercises.length ? (
                     <span className="ml-2 text-[10.5px] text-crow-glow">
                       · {lesson.exercises.length} ejercicio(s)

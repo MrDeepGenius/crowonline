@@ -1,8 +1,9 @@
 import { DashboardShell } from "@/components/layout/dashboard-shell";
-import { StudioWorkspace } from "@/components/creator/studio-workspace";
+import { StudioWorkspaceV2 } from "@/components/creator/studio-workspace-v2";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth/session";
 import { providerStatus } from "@/lib/ai/providers";
+import { videoProviderStatus } from "@/lib/ai/providers/video";
 import { getPlanUsage } from "@/server/services/creator";
 import { formatUsdt } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export default async function CreatorStudioPage({
 
   const usage = await getPlanUsage(user.id);
   const providers = providerStatus();
+  const video = videoProviderStatus();
 
   return (
     <DashboardShell
@@ -48,6 +50,13 @@ export default async function CreatorStudioPage({
         </p>
       ) : null}
 
+      {usage.expired ? (
+        <p className="mb-5 rounded-xl border border-crow-warn/30 bg-crow-warn/10 px-4 py-3 text-[12.5px] text-crow-warn">
+          Tu plan {usage.subscription?.plan ?? "START"} venció. Los límites quedaron
+          reducidos a los del plan Start hasta que actives un plan vigente.
+        </p>
+      ) : null}
+
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="crow-card p-4">
           <p className="text-[11px] uppercase tracking-wider text-crow-muted">
@@ -69,6 +78,10 @@ export default async function CreatorStudioPage({
             {providers.multimedia.configured
               ? `${providers.multimedia.label} ✓`
               : "Leonardo (sin clave) · portadas degradadas"}
+            {" · "}
+            {video.configured
+              ? `Video ${video.label} ✓`
+              : "Proveedor de video no configurado"}
           </p>
         </div>
         <div className="crow-card p-4">
@@ -81,7 +94,7 @@ export default async function CreatorStudioPage({
         </div>
       </div>
 
-      <StudioWorkspace initialIdea={params.idea ?? ""} />
+      <StudioWorkspaceV2 initialIdea={params.idea ?? ""} />
     </DashboardShell>
   );
 }

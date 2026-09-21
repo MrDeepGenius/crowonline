@@ -45,7 +45,7 @@ export function StudioChat({
   loading: boolean;
   working: "generate" | "materialize" | "publish" | null;
   provider: string;
-  mode: "live" | "demo";
+  mode: "live" | "skeleton";
   idea: string;
   onIdeaChange: (value: string) => void;
   format: ProductType;
@@ -75,7 +75,7 @@ export function StudioChat({
           </div>
         </div>
         <Badge tone={mode === "live" ? "success" : "warn"} dot>
-          {mode === "live" ? provider : `${provider} · demo`}
+          {mode === "live" ? provider : `${provider} · esqueleto`}
         </Badge>
       </div>
 

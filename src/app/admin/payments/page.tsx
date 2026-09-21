@@ -1,6 +1,7 @@
 import { AdminPaymentTable } from "@/components/admin/admin-payment-table";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { Card, CardHeader, StatCard } from "@/components/ui/card";
+import { paymentsTestModeEnabled, TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
 import { listPaymentsForAdmin } from "@/server/services/settlement";
 import { formatUsdt } from "@/lib/utils";
 import Link from "next/link";
@@ -30,6 +31,7 @@ export default async function AdminPaymentsPage({
       description="Primera versión: USDT BEP-20. Los pagos se confirman con el webhook o el watcher de blockchain."
       activePath="/admin/payments"
     >
+      {paymentsTestModeEnabled() ? <p className="mb-5 rounded-xl border border-crow-warn p-4 text-crow-warn">TEST MODE activo · Simulación local. Fondos TEST no retirables.</p> : null}
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Payment intents" value={all.length} />
         <StatCard
@@ -46,7 +48,7 @@ export default async function AdminPaymentsPage({
           label="Recaudado"
           value={formatUsdt(
             all
-              .filter((payment) => payment.status === "PAID")
+              .filter((payment) => payment.status === "PAID" && payment.provider !== TEST_PAYMENT_PROVIDER)
               .reduce((sum, payment) => sum + payment.amountUsdt, 0),
           )}
           tone="violet"
@@ -79,6 +81,7 @@ export default async function AdminPaymentsPage({
           description="Todo lo sensible vive en variables de entorno"
         />
         <ul className="space-y-2 text-[12.5px] text-crow-muted">
+          {paymentsTestModeEnabled() ? <li className="text-crow-warn">Provider activo para compras nuevas: local_test. No se usa la configuración blockchain mostrada debajo.</li> : null}
           <li>
             Provider: <span className="text-crow-text">{process.env.PAYMENT_PROVIDER ?? "usdt_bep20"}</span>
           </li>

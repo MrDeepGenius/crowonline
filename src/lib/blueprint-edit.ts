@@ -34,6 +34,11 @@ const emptyLesson = (): BlueprintLesson => ({
   durationMin: 20,
   imagePrompt: "",
   videoUrl: "",
+  videoEnabled: false,
+  videoRequired: false,
+  videoPrompt: "",
+  videoDuration: 5,
+  videoStyle: "cinematic",
   isFreePreview: false,
   exercises: [],
 });
@@ -139,7 +144,14 @@ export function addExercise(
   return patchLesson(blueprint, moduleIndex, lessonIndex, {
     exercises: [
       ...lesson.exercises,
-      { title: "Nuevo ejercicio", instructions: "", kind: "PRACTICE" },
+      {
+        title: "Nuevo ejercicio",
+        instructions: "",
+        kind: "PRACTICE",
+        options: [],
+        correctAnswer: "",
+        explanation: "",
+      },
     ],
   });
 }

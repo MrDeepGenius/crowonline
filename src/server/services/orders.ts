@@ -1,4 +1,6 @@
 import prisma from "@/lib/db";
+import { localTestIntent, paymentsTestModeEnabled, TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
+import { paymentIntent } from "@/server/payments/intent";
 import { makeReference } from "@/server/services/wallet";
 import { findAffiliateByCode, getReferredAffiliateCode } from "@/server/services/affiliate";
 
@@ -55,7 +57,16 @@ export async function createOrderWithPayment({
   });
   if (!product) throw new Error("Producto no disponible");
 
-  if (product.creatorId === buyerId) {
+  // ADMIN (el dueño del sistema) puede comprar cualquier producto.
+  // Un creador normal nunca puede comprar su propio producto (antifraud).
+  const buyer = await prisma.user.findUnique({
+    where: { id: buyerId },
+    select: { roles: true },
+  });
+  const buyerRoles: string[] = JSON.parse(buyer?.roles ?? "[]");
+  const buyerIsAdmin = buyerRoles.includes("ADMIN");
+
+  if (!buyerIsAdmin && product.creatorId === buyerId) {
     throw new Error("No puedes comprar tu propio producto.");
   }
 
@@ -68,20 +79,14 @@ export async function createOrderWithPayment({
   });
   if (existing) throw new Error("Ya tienes este producto en tu biblioteca");
 
-  // A creator can never buy their own product (no self-purchase / self-referral).
-  if (product.creatorId === buyerId) {
-    throw new Error("No puedes comprar tu propio producto.");
-  }
-
   // Durable affiliate attribution (registration referral wins when the URL
   // code is absent). Self-referral is neutralized inside the resolver.
   const attribution = await resolveSaleAttribution(buyerId, referralCode);
 
-  const address =
-    process.env.PAYMENT_USDT_BEP20_ADDRESS ?? "0x0000000000000000000000000000000000000000";
-  const requiredConfirmations = Number(process.env.PAYMENT_REQUIRED_CONFIRMATIONS ?? 12);
+  const reference = makeReference(paymentsTestModeEnabled() ? "CROW-TEST" : "CROW-ORD");
+  const intent = paymentsTestModeEnabled() ? localTestIntent() : await paymentIntent(reference, product.priceUsdt);
+  const address = intent.address;
   const expiresAt = new Date(Date.now() + 45 * 60 * 1000);
-  const reference = makeReference("CROW-ORD");
 
   const order = await prisma.$transaction(async (tx) => {
     const created = await tx.order.create({
@@ -109,12 +114,9 @@ export async function createOrderWithPayment({
       data: {
         orderId: created.id,
         userId: buyerId,
-        provider: process.env.PAYMENT_PROVIDER ?? "usdt_bep20",
-        network: "BEP20",
-        address,
+        ...intent,
         amountUsdt: product.priceUsdt,
         status: "PENDING",
-        requiredConfirmations,
         expiresAt,
       },
     });
@@ -127,7 +129,7 @@ export async function createOrderWithPayment({
         amountUsdt: product.priceUsdt,
         userId: buyerId,
         orderId: created.id,
-        metadata: JSON.stringify({ productId: product.id, network: "BEP20" }),
+        metadata: JSON.stringify({ productId: product.id, network: intent.network, mode: intent.provider === TEST_PAYMENT_PROVIDER ? "TEST" : "BLOCKCHAIN" }),
       },
     });
 
@@ -139,7 +141,7 @@ export async function createOrderWithPayment({
     reference: order.reference,
     amountUsdt: product.priceUsdt,
     address,
-    network: "BEP20",
+    network: intent.network,
     expiresAt,
     productTitle: product.title,
   };
@@ -147,7 +149,7 @@ export async function createOrderWithPayment({
 
 export async function listBuyerOrders(buyerId: string) {
   return prisma.order.findMany({
-    where: { buyerId },
+    where: { buyerId, boost: { is: null } },
     orderBy: { createdAt: "desc" },
     include: {
       items: { include: { product: { select: { slug: true, coverEmoji: true, coverGradient: true } } } },

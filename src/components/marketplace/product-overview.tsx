@@ -7,12 +7,14 @@ import { cn, formatNumber } from "@/lib/utils";
 export function ProductCover({
   coverEmoji,
   coverGradient,
+  coverImageUrl,
   type,
   category,
   durationMin,
 }: {
   coverEmoji: string;
   coverGradient: string;
+  coverImageUrl?: string | null;
   type: string;
   category: string;
   durationMin?: number | null;
@@ -24,9 +26,20 @@ export function ProductCover({
         coverGradientClass(coverGradient),
       )}
     >
-      <div className="absolute inset-0 grid-crow opacity-40" />
-      <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-      <span className="relative text-6xl drop-shadow-lg">{coverEmoji || "◆"}</span>
+      {coverImageUrl ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={coverImageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-90"
+        />
+      ) : (
+        <>
+          <div className="absolute inset-0 grid-crow opacity-40" />
+          <div className="absolute -right-10 -top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
+          <span className="relative text-6xl drop-shadow-lg">{coverEmoji || "◆"}</span>
+        </>
+      )}
       <div className="absolute bottom-4 left-4 flex flex-wrap gap-2">
         <Badge tone="outline" className="border-white/25 bg-black/40 backdrop-blur">
           {PRODUCT_TYPE_LABEL[type as ProductType] ?? type}
@@ -83,7 +96,7 @@ export function CreatorBadge({
   durationMin?: number | null;
 }) {
   return (
-    <div className="mt-6 flex items-center gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+    <div className="mp-card mt-6 flex items-center gap-3 rounded-2xl p-4">
       <Avatar name={name} size={40} />
       <div className="flex-1">
         <p className="text-[13px] font-medium text-crow-text">{name}</p>
@@ -103,7 +116,7 @@ export function IncludesGrid({ items }: { items: string[] }) {
       {items.map((item) => (
         <li
           key={item}
-          className="flex items-start gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3.5"
+          className="mp-card flex items-start gap-3 rounded-xl p-3.5"
         >
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-crow-violet" />
           <span className="text-[13px] leading-relaxed text-crow-text">{item}</span>

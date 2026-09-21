@@ -1,91 +1,27 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-
 import prisma from "@/lib/db";
-import { confirmOrderPayment, markOrderFailed } from "@/server/services/settlement";
+import { confirmOrderPayment } from "@/server/services/settlement";
 
-const payloadSchema = z.object({
-  reference: z.string().min(3).optional(),
-  orderId: z.string().min(3).optional(),
-  txHash: z.string().min(6).optional(),
-  confirmations: z.coerce.number().int().min(0).optional(),
-  status: z.enum(["PAID", "FAILED"]).default("PAID"),
-});
-
-function authorized(request: Request) {
-  const secret = process.env.PAYMENT_WEBHOOK_SECRET;
-  if (!secret) return true; // dev mode: no secret configured
-  const header =
-    request.headers.get("x-crow-signature") ??
-    request.headers.get("authorization")?.replace("Bearer ", "");
-  return header === secret;
-}
-
-/**
- * Blockchain / PSP webhook.
- * Configure PAYMENT_WEBHOOK_SECRET and send it as `x-crow-signature`.
- * The commission engine only runs through confirmOrderPayment, so the split is
- * always applied exactly once.
- */
+const payload = z.object({ orderId: z.string().min(1), txHash: z.string().regex(/^0x[\da-f]{64}$/i) }).strict();
 export async function POST(request: Request) {
-  if (!authorized(request)) {
+  const secret = process.env.PAYMENT_WEBHOOK_SECRET;
+  const supplied = request.headers.get("x-crow-signature") ?? "";
+  if (!secret || Buffer.byteLength(secret) !== Buffer.byteLength(supplied) ||
+      !timingSafeEqual(Buffer.from(secret), Buffer.from(supplied))) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-
-  let body: unknown;
+  const parsed = payload.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "invalid payload" }, { status: 422 });
+  const payment = await prisma.payment.findUnique({ where: { orderId: parsed.data.orderId } });
+  if (payment?.chainId !== 97) return NextResponse.json({ error: "Not a testnet payment" }, { status: 422 });
   try {
-    body = await request.json();
+    // Webhook is only a hint. Status and confirmations ALWAYS come from RPC.
+    const result = await confirmOrderPayment(parsed.data);
+    const order = await prisma.order.findUniqueOrThrow({ where: { id: parsed.data.orderId } });
+    return NextResponse.json({ ok: true, status: order.status, alreadyPaid: result.alreadyPaid });
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    return NextResponse.json({ error: "TX not verified; no payment credited" }, { status: 422 });
   }
-
-  const parsed = payloadSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "invalid payload", details: parsed.error.flatten() },
-      { status: 422 },
-    );
-  }
-
-  const { reference, orderId, txHash, confirmations, status } = parsed.data;
-
-  const order = orderId
-    ? await prisma.order.findUnique({ where: { id: orderId } })
-    : reference
-      ? await prisma.order.findUnique({ where: { reference } })
-      : null;
-
-  if (!order) {
-    return NextResponse.json({ error: "order not found" }, { status: 404 });
-  }
-
-  if (status === "FAILED") {
-    await markOrderFailed({ orderId: order.id, reason: "webhook_failed" });
-    return NextResponse.json({ ok: true, orderId: order.id, status: "FAILED" });
-  }
-
-  const result = await confirmOrderPayment({
-    orderId: order.id,
-    txHash,
-    confirmations,
-  });
-
-  return NextResponse.json({
-    ok: true,
-    orderId: order.id,
-    alreadyPaid: result.alreadyPaid,
-    commissions: result.snapshot.length,
-  });
-}
-
-export async function GET() {
-  const pending = await prisma.payment.count({ where: { status: "PENDING" } });
-  return NextResponse.json({
-    provider: process.env.PAYMENT_PROVIDER ?? "usdt_bep20",
-    network: "BEP20",
-    pendingPayments: pending,
-    requiredConfirmations: Number(
-      process.env.PAYMENT_REQUIRED_CONFIRMATIONS ?? 12,
-    ),
-  });
 }

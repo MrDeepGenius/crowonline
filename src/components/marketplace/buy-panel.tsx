@@ -29,13 +29,13 @@ export function BuyPanel({
   );
 
   return (
-    <div className="crow-card sticky top-24 p-6">
+    <div className="mp-card mp-card-hover sticky top-24 rounded-2xl p-6">
       <div className="flex items-end justify-between">
         <div>
           <p className="text-[11px] uppercase tracking-wider text-crow-muted">
             Precio
           </p>
-          <p className="mt-1 text-3xl font-semibold text-crow-text">
+          <p className="mp-display mt-1 text-3xl font-semibold text-crow-text">
             {formatUsdt(priceUsdt)}
           </p>
         </div>
@@ -64,7 +64,12 @@ export function BuyPanel({
           {referralCode ? (
             <input type="hidden" name="referralCode" value={referralCode} />
           ) : null}
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button
+            type="submit"
+            size="lg"
+            className="mp-btn-primary w-full bg-gradient-to-r from-crow-violet to-crow-glow"
+            disabled={pending}
+          >
             {pending ? "Creando orden…" : "Comprar ahora"}
           </Button>
           {state.message ? (

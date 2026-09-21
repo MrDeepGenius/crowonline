@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getProductBySlug } from "@/server/services/catalog";
 import { getCourseProgress, isEnrolled } from "@/server/services/learning";
+import { parseJson } from "@/lib/utils";
 import prisma from "@/lib/db";
 
 export const metadata = { title: "Aula" };
@@ -58,8 +59,8 @@ export default async function LearnPage({
           <Card className="max-w-lg p-8 text-center">
             <h1 className="text-lg font-semibold">Este curso no está en tu biblioteca</h1>
             <p className="mt-2 text-[13px] text-crow-muted">
-              Compra {product.title} para desbloquear todas las lecciones, el
-              progreso guardado y el certificado.
+              Compra {product.title} para desbloquear todas las lecciones, el progreso
+              guardado y el certificado.
             </p>
             <div className="mt-6 flex justify-center gap-2.5">
               <ButtonLink href={`/marketplace/${product.slug}`}>
@@ -79,18 +80,23 @@ export default async function LearnPage({
     );
   }
 
-  const { completedIds, pct, certificate } = await getCourseProgress(user.id, product.id);
-
-  const modules = await prisma.module.findMany({
-    where: { courseId: product.course.id },
-    orderBy: { position: "asc" },
-    include: {
-      lessons: {
-        orderBy: { position: "asc" },
-        include: { exercises: { orderBy: { position: "asc" } } },
+  const [{ completedIds, pct, certificate }, modules, resources] = await Promise.all([
+    getCourseProgress(user.id, product.id),
+    prisma.module.findMany({
+      where: { courseId: product.course.id },
+      orderBy: { position: "asc" },
+      include: {
+        lessons: {
+          orderBy: { position: "asc" },
+          include: { exercises: { orderBy: { position: "asc" } } },
+        },
       },
-    },
-  });
+    }),
+    prisma.resource.findMany({
+      where: { productId: product.id },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
 
   const activeLessonId = query.lesson ?? modules[0]?.lessons[0]?.id ?? "";
 
@@ -113,21 +119,35 @@ export default async function LearnPage({
             certificateSerial={certificate?.serial ?? null}
             completedIds={Array.from(completedIds)}
             activeLessonId={activeLessonId}
+            resources={resources.map((r) => ({
+              id: r.id,
+              title: r.title,
+              content: r.content,
+              url: r.url,
+              kind: r.kind,
+            }))}
             modules={modules.map((module) => ({
               id: module.id,
               title: module.title,
               summary: module.summary,
+              imageUrl: module.imageUrl,
               lessons: module.lessons.map((lesson) => ({
                 id: lesson.id,
                 title: lesson.title,
                 content: lesson.content,
                 durationMin: lesson.durationMin,
                 videoUrl: lesson.videoUrl,
+                videoGenerationStatus: lesson.videoGenerationStatus,
+                videoSource: lesson.videoSource,
+                imageUrl: lesson.imageUrl,
                 exercises: lesson.exercises.map((exercise) => ({
                   id: exercise.id,
                   title: exercise.title,
                   instructions: exercise.instructions,
                   kind: exercise.kind,
+                  options: parseJson<string[]>(exercise.options, []),
+                  correctAnswer: exercise.correctAnswer,
+                  explanation: exercise.explanation,
                 })),
               })),
             }))}

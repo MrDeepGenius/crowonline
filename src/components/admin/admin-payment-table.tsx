@@ -1,3 +1,4 @@
+import { TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
 import { Badge, StatusBadge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { formatDateTime, formatUsdt } from "@/lib/utils";
@@ -11,6 +12,11 @@ type AdminPayment = {
   status: string;
   confirmations: number;
   requiredConfirmations: number;
+  senderAddress: string | null;
+  tokenAddress: string | null;
+  blockNumber: number | null;
+  blockTime: Date | null;
+  verificationError: string | null;
   txHash: string | null;
   createdAt: Date;
   user: { name: string; email: string };
@@ -43,6 +49,7 @@ export function AdminPaymentTable({ payments }: { payments: AdminPayment[] }) {
               <tr key={payment.id}>
                 <td className="py-2.5 font-mono text-[11px] text-crow-text">
                   {payment.order.reference}
+                  {payment.provider === TEST_PAYMENT_PROVIDER ? <div><Badge tone="warn">TEST MODE · NO RETIRABLE</Badge></div> : null}
                 </td>
                 <td className="py-2.5">
                   <p className="text-crow-text">{payment.user.name}</p>
@@ -52,23 +59,25 @@ export function AdminPaymentTable({ payments }: { payments: AdminPayment[] }) {
                   <p className="text-crow-muted">
                     {payment.provider} · {payment.network}
                   </p>
-                  <p className="max-w-[160px] truncate font-mono text-[10.5px] text-crow-glow">
-                    {payment.address}
+                  <p className="max-w-[280px] break-all font-mono text-[10.5px] text-crow-glow">
+                    Destino: {payment.address}<br />Origen: {payment.senderAddress ?? "—"}<br />
+                    Token: {payment.tokenAddress ?? "legacy"}<br />Bloque: {payment.blockNumber ?? "—"}
                   </p>
                 </td>
                 <td className="py-2.5 text-crow-muted">
                   {payment.confirmations}/{payment.requiredConfirmations}
                   {payment.txHash ? (
-                    <p className="max-w-[150px] truncate font-mono text-[10.5px]">
+                    <p className="max-w-[260px] break-all font-mono text-[10.5px]">
                       {payment.txHash}
                     </p>
                   ) : null}
                 </td>
                 <td className="py-2.5 text-crow-muted">
-                  {formatDateTime(payment.createdAt)}
+                  {formatDateTime(payment.blockTime ?? payment.createdAt)}
                 </td>
                 <td className="py-2.5">
                   <StatusBadge status={payment.status} />
+                  {payment.verificationError ? <p className="max-w-[180px] text-crow-warn">{payment.verificationError}</p> : null}
                 </td>
                 <td className="py-2.5 text-right font-medium text-crow-text">
                   {formatUsdt(payment.amountUsdt)}

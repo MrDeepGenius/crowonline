@@ -10,11 +10,17 @@ import { getPlanUsage } from "@/server/services/creator";
 import { PRODUCT_STATUS_LABEL, type ProductStatus } from "@/lib/domain";
 import { PRODUCT_TYPE_LABEL } from "@/lib/plans";
 import { formatDate, formatNumber, formatUsdt } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
+import { isBoostActive } from "@/lib/boost";
+import { createBoostCheckoutAction } from "@/server/actions/boost";
 import type { ProductType } from "@/lib/domain";
 
 export const metadata = { title: "Mis productos" };
 
-export default async function CreatorProductsPage() {
+export default async function CreatorProductsPage({ searchParams }: {
+  searchParams: Promise<{ boostError?: string }>;
+}) {
+  const { boostError } = await searchParams;
   const user = await getCurrentUser();
   if (!user) return null;
 
@@ -41,6 +47,11 @@ export default async function CreatorProductsPage() {
         </Badge>
       </div>
 
+      <p className="mb-4 text-sm text-crow-muted">
+        CROW BOOST: 3 USDT por producto / 30 días de mayor exposición en Destacados.
+        No garantiza ventas ni una posición exacta. Al vencer, vuelve al ranking normal.
+      </p>
+      {boostError ? <p role="alert" className="mb-4 text-crow-warn">No se pudo iniciar el pago. Verifica que el producto esté publicado e inténtalo nuevamente.</p> : null}
       {products.length ? (
         <div className="space-y-4">
           {products.map((product) => (
@@ -64,6 +75,20 @@ export default async function CreatorProductsPage() {
                   <p className="mt-1 line-clamp-1 text-[12px] text-crow-muted">
                     {product.shortDescription}
                   </p>
+                  {product.boosts.filter((boost) => boost.startedAt).slice(0, 1).map((boost) => (
+                    <p key={boost.id} className="mt-2 text-xs text-crow-glow">
+                      CROW BOOST · {isBoostActive(boost) ? "ACTIVE" : "EXPIRED"} · Vencimiento: {formatDateTime(boost.expiresAt)}
+                    </p>
+                  ))}
+                  {product.status === "PUBLISHED" ? (
+                    <form action={createBoostCheckoutAction} className="mt-2">
+                      <input type="hidden" name="productId" value={product.id} />
+                      <button type="submit" className={buttonClass("secondary", "sm")}>
+                        {product.boosts.some((boost) => isBoostActive(boost)) ? "Ver pago Boost" :
+                          product.boosts.some((boost) => boost.order.status === "PENDING" && boost.order.expiresAt && boost.order.expiresAt > new Date()) ? "Completar pago Boost" : "CROW BOOST · 3 USDT / 30 días"}
+                      </button>
+                    </form>
+                  ) : null}
                   <p className="mt-1.5 text-[11px] text-crow-muted">
                     {PRODUCT_TYPE_LABEL[product.type as ProductType] ?? product.type} ·{" "}
                     {product.category} · actualizado {formatDate(product.updatedAt)}

@@ -6,14 +6,17 @@
  *   Crow platform      10%
  *   Direct affiliate   30%
  *   L1 5% · L2 3% · L3 2% · L4 2% · L5 1%   (affiliate team, 13% total)
- *   Rewards Pool        2%
+ *   Emergency Reserve   2%
  *
  * CROW always keeps its configured share (10%): the matrix above totals exactly
  * 100% on its own (45 + 10 + 30 + 13 + 2), so no line ever absorbs a residual.
  *
- * Emergency Reserve is NOT part of the permanent distribution. It only exists
- * as the documented exception of the very first L1 unlock: that L1 5% is split as
- *   2.5% Affiliate + 2.5% Emergency Reserve   (matrix still totals exactly 100%).
+ * Emergency Reserve is a permanent 2% of PRODUCT sales, independent of the
+ * first L1 unlock: that L1 5% is split as 2.5% Affiliate + 2.5% additional Reserve.
+ * The permanent reserve has no level; the unlock reserve has level=1.
+ * Founder sales must NEVER use this engine: direct seller only (affiliate 10%,
+ * founder 15%, creator 10%), with no network or level unlock. No Founder checkout
+ * exists in this codebase yet; documenting that rule does not implement it.
  *
  * Unassignable commissions go permanently to CROW Treasury, separately from
  * PLATFORM's fixed 10%, with their original role and reason preserved.
@@ -131,10 +134,14 @@ export function computeSplit({
   };
 
   assign("CREATOR", config.creator, creatorId);
-  assign("DIRECT_AFFILIATE", config.directAffiliate, direct);
+  const seen = new Set([creatorId]);
+  if (direct) seen.add(direct);
+  assign("DIRECT_AFFILIATE", config.directAffiliate, direct === creatorId ? null : direct);
   config.levels.forEach((rate, index) => {
     const userId = affiliateUpline[index + 1];
-    // An invalid L1 goes wholly to Treasury: no unlock and no emergency reserve.
+    if (userId && seen.has(userId)) beneficiaryIssues = { ...beneficiaryIssues, [userId]: "INELIGIBLE_BENEFICIARY" };
+    if (userId) seen.add(userId);
+    // An invalid L1 goes wholly to Treasury: no unlock and no additional reserve.
     if (index === 0 && isFirstL1Unlock && !issueFor(direct) && !issueFor(userId)) {
       assign("L1", round(rate - config.firstL1EmergencyReserve), userId, 1);
       lines.push({
@@ -147,10 +154,11 @@ export function computeSplit({
     }
   });
 
-  // Rewards Pool: permanent 2% line of the matrix, part of the 100%.
+  // Permanent Emergency Reserve (2%). Legacy config/export names are retained
+  // temporarily for callers; this is NOT a rewards pool or license commission.
   const rewardsPoolRate = round(config.rewardsPool);
   lines.push({
-    role: "REWARDS_POOL",
+    role: "EMERGENCY_RESERVE",
     rate: rewardsPoolRate,
     amount: round(base * rewardsPoolRate),
     userId: null,
@@ -178,6 +186,104 @@ export function splitPercent(rate: number) {
   return `${Math.round(rate * 10000) / 100}%`;
 }
 
+// ---------------------------------------------------------------------------
+// CREATOR LICENSES — regla única y cerrada
+// ---------------------------------------------------------------------------
+// Una licencia Creator vendida se reparte SIEMPRE así:
+//   Afiliado directo (referente real registrado)  15%
+//   CROW                                          85%
+//
+// NO existen L1..L5, residual, apertura de niveles ni redistribución para
+// licencias Creator: la matriz multinivel de PRODUCTOS (computeSplit) nunca
+// aplica aquí. Las líneas Brian/Guille y el beneficio empresarial 50/50 son
+// contabilidad de CROW, no comisiones de usuario (no se calculan en este motor).
+
+export const CREATOR_LICENSE_DIRECT_RATE = 0.15;
+export const CREATOR_LICENSE_PLATFORM_RATE = 0.85;
+
+export type LicenseSplitLine = {
+  role: "LICENSE_DIRECT_AFFILIATE" | "CROW_PLATFORM_LICENSE" | "CROW_TREASURY";
+  rate: number;
+  amount: number;
+  userId?: string | null;
+  sourceRole?: "LICENSE_DIRECT_AFFILIATE";
+  reason?: TreasuryReason;
+  beneficiaryId?: string | null;
+};
+
+export type LicenseSplitResult = {
+  lines: LicenseSplitLine[];
+  totalRate: number;
+  totalAmount: number;
+};
+
+export type LicenseSplitInput = {
+  amount: number;
+  /** UserId of the referring affiliate (real, registered referral). */
+  referrerUserId?: string | null;
+  /** Rejections resolved by the service; absent IDs are always missing. */
+  beneficiaryIssues?: Record<string, TreasuryReason>;
+};
+
+/**
+ * Computes the fixed 100% distribution of a Creator license sale.
+ * 15% direct to the referring affiliate + 85% CROW. With no valid referrer the
+ * 15% goes to CROW_TREASURY (preserving role/reason) — it never redistributes
+ * into downline levels and never inflates the 85% platform line.
+ */
+export function computeCreatorLicenseSplit({
+  amount,
+  referrerUserId = null,
+  beneficiaryIssues = {},
+}: LicenseSplitInput): LicenseSplitResult {
+  const base = Math.max(0, Number(amount) || 0);
+  const directRate = CREATOR_LICENSE_DIRECT_RATE;
+  const platformRate = CREATOR_LICENSE_PLATFORM_RATE;
+
+  if (
+    Math.abs(directRate + platformRate - 1) > 1e-10 ||
+    directRate < 0 ||
+    platformRate < 0
+  ) {
+    throw new Error("La matriz de licencias Creator debe sumar 100% con porcentajes válidos");
+  }
+
+  const lines: LicenseSplitLine[] = [];
+  const reason = referrerUserId ? beneficiaryIssues[referrerUserId] : "MISSING_BENEFICIARY";
+
+  lines.push(
+    reason
+      ? {
+          role: "CROW_TREASURY" as const,
+          sourceRole: "LICENSE_DIRECT_AFFILIATE" as const,
+          reason,
+          beneficiaryId: referrerUserId ?? null,
+          userId: null,
+          rate: directRate,
+          amount: round(base * directRate),
+        }
+      : {
+          role: "LICENSE_DIRECT_AFFILIATE" as const,
+          rate: directRate,
+          amount: round(base * directRate),
+          userId: referrerUserId,
+        },
+  );
+
+  lines.push({
+    role: "CROW_PLATFORM_LICENSE",
+    rate: platformRate,
+    amount: round(base * platformRate),
+    userId: null,
+  });
+
+  return {
+    lines,
+    totalRate: round(lines.reduce((sum, line) => sum + line.rate, 0)),
+    totalAmount: round(lines.reduce((sum, line) => sum + line.amount, 0)),
+  };
+}
+
 /** Documents the fixed matrix (each row is a share of the sale, totals 100%). */
 export function describeSplit(config: SplitConfig = DEFAULT_SPLIT) {
   return [
@@ -189,6 +295,6 @@ export function describeSplit(config: SplitConfig = DEFAULT_SPLIT) {
     { role: "L3", rate: config.levels[2] },
     { role: "L4", rate: config.levels[3] },
     { role: "L5", rate: config.levels[4] },
-    { role: "Rewards Pool", rate: config.rewardsPool },
+    { role: "Emergency Reserve", rate: config.rewardsPool },
   ] as { role: string; rate: number }[];
 }

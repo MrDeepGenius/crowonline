@@ -16,7 +16,7 @@ export function PlanCards({
   ctaLabel?: string;
 }) {
   return (
-    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-5">
+    <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
       {CREATOR_PLANS.map((plan) => {
         const featured = highlightPlan ? plan.id === highlightPlan : plan.highlight;
         return (

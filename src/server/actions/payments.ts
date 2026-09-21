@@ -9,11 +9,7 @@ import { hasRole } from "@/lib/rbac";
 import type { Role } from "@/lib/domain";
 import { confirmOrderPayment, markOrderFailed } from "@/server/services/settlement";
 
-/**
- * Development/demo confirmation. In production the blockchain watcher or the
- * payment webhook (/api/webhooks/payments) calls confirmOrderPayment instead.
- * Only the order owner can confirm it from the UI.
- */
+/** Legacy form handler: simulation is disabled in every environment. */
 export async function confirmPaymentDemoAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -21,42 +17,39 @@ export async function confirmPaymentDemoAction(formData: FormData) {
   const orderId = String(formData.get("orderId") ?? "");
   const order = await prisma.order.findFirst({
     where: { id: orderId, buyerId: user.id },
-    include: { payment: true, items: { include: { product: true } } },
+    include: { boost: true, payment: true, items: { include: { product: true } } },
   });
   if (!order) redirect("/library");
 
-  const txHash =
-    order.payment?.txHash ?? `0x${Math.random().toString(16).slice(2).padEnd(40, "0")}`;
-  await confirmOrderPayment({ orderId: order.id, txHash });
-  redirect("/library?purchased=1");
+  // Legacy action retained only to invalidate old forms; never simulates PAID.
+  redirect(`/checkout/${order.reference}?paymentError=use-wallet`);
 }
 
-/** ADMIN/DEV: confirma un Payment PENDING como PAID sin blockchain real. */
+/** ADMIN: requests blockchain verification, never overrides its outcome. */
 export async function confirmPaymentAdminAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   if (!hasRole(user.roleList as Role[], "ADMIN")) redirect("/dashboard?denied=admin");
 
   const orderId = String(formData.get("orderId") ?? "");
-  const txHash =
-    String(formData.get("txHash") ?? "").trim() ||
-    `0xDEV-${Math.random().toString(16).slice(2, 10).toUpperCase().padEnd(8, "0")}`;
+  const txHash = String(formData.get("txHash") ?? "").trim();
 
   const order = await prisma.order.findFirst({
     where: { id: orderId },
     include: { payment: true },
   });
-  if (!order) redirect("/admin/orders");
-
-  const result = await confirmOrderPayment({ orderId: order.id, txHash });
+  if (!order || order.payment?.chainId !== 97) redirect("/admin/orders?paymentError=testnet-only");
+  try {
+    await confirmOrderPayment({ orderId: order.id, txHash: txHash || order.payment.txHash || "" });
+  } catch {
+    redirect("/admin/orders?paymentError=not-verified");
+  }
 
   revalidatePath("/admin/orders");
   revalidatePath("/admin/payments");
   revalidatePath("/library");
 
-  redirect(
-    `/admin/orders?confirmed=${order.reference}${result.alreadyPaid ? "&already=1" : ""}`,
-  );
+  redirect("/admin/payments");
 }
 
 export async function cancelOrderAction(formData: FormData) {

@@ -4,7 +4,11 @@ import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { LessonForms } from "@/components/creator/lesson-forms";
 import { ProductBriefForm } from "@/components/creator/product-brief-form";
 import { PublishPanel } from "@/components/creator/publish-panel";
+import { CoverManager } from "@/components/creator/cover-manager";
+import { LessonImageManager } from "@/components/creator/lesson-image-manager";
+import { LessonVideoManager } from "@/components/creator/lesson-video-manager";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { Card, CardHeader } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCreatorProduct } from "@/server/services/catalog";
 import { PRODUCT_STATUS_LABEL, type ProductStatus } from "@/lib/domain";
@@ -70,6 +74,15 @@ export default async function CreatorProductDetailPage({
               coverGradient: product.coverGradient,
             }}
           />
+
+          {/* Cover image manager */}
+          <CoverManager
+            productId={product.id}
+            currentUrl={product.coverImageUrl}
+            coverGradient={product.coverGradient}
+            coverEmoji={product.coverEmoji}
+          />
+
           <LessonForms
             productId={product.id}
             modules={(product.course?.modules ?? []).map((module) => ({
@@ -85,6 +98,66 @@ export default async function CreatorProductDetailPage({
               })),
             }))}
           />
+
+          {/* Lesson image managers */}
+          {product.course && product.course.modules.length > 0 ? (
+            <Card>
+              <CardHeader
+                title="Imágenes de lecciones"
+                description="Generá con CROW o subí tu propia imagen para cada lección."
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {product.course.modules.flatMap((mod) =>
+                  mod.lessons.map((lesson) => (
+                    <LessonImageManager
+                      key={lesson.id}
+                      lessonId={lesson.id}
+                      lessonTitle={lesson.title}
+                      currentUrl={(lesson as { imageUrl?: string | null }).imageUrl}
+                      currentStatus={(lesson as { imageGenerationStatus?: string | null }).imageGenerationStatus}
+                      imagePrompt={(lesson as { imagePrompt?: string | null }).imagePrompt}
+                    />
+                  ))
+                )}
+              </div>
+            </Card>
+          ) : null}
+
+          {/* Lesson video managers */}
+          {product.course && product.course.modules.length > 0 ? (
+            <Card>
+              <CardHeader
+                title="Videos de introducción"
+                description="Generá con CROW, subí tu propio video o elegí de tu biblioteca. Los videos propios nunca se reemplazan automáticamente."
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {product.course.modules.flatMap((mod) =>
+                  mod.lessons.map((lesson) => {
+                    const l = lesson as {
+                      id: string;
+                      title: string;
+                      videoUrl?: string | null;
+                      videoGenerationStatus?: string | null;
+                      videoSource?: string | null;
+                      imageGenerationId?: string | null;
+                      imageId?: string | null;
+                    };
+                    return (
+                      <LessonVideoManager
+                        key={l.id}
+                        lessonId={l.id}
+                        lessonTitle={l.title}
+                        currentVideoUrl={l.videoUrl}
+                        currentStatus={l.videoGenerationStatus}
+                        currentSource={l.videoSource}
+                        hasImage={Boolean(l.imageGenerationId ?? l.imageId)}
+                      />
+                    );
+                  })
+                )}
+              </div>
+            </Card>
+          ) : null}
         </div>
 
         <div className="space-y-6">

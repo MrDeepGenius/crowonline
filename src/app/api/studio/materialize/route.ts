@@ -9,6 +9,12 @@ import {
   createDraftFromBlueprint,
   saveBlueprint,
 } from "@/server/services/creator";
+import {
+  generateProductCover,
+  generateModuleImages,
+  generateProductImages,
+} from "@/lib/ai/image-generation";
+import { LeonardoProvider } from "@/lib/ai/providers/leonardo";
 
 const bodySchema = z.object({
   idea: z.string().min(1).max(2000).default("Idea sin descripción"),
@@ -21,9 +27,14 @@ const bodySchema = z.object({
 });
 
 /**
- * GENERACIÓN — crea el Product (+ Course/Module/Lesson/Exercise para COURSE)
- * a partir del blueprint editado. Reutiliza el producto ya vinculado al
- * blueprint: nunca duplica.
+ * POST /api/studio/materialize
+ *
+ * 1. Persiste el blueprint y crea el Product + Course + Module + Lesson + Exercise
+ * 2. Genera portada de forma SÍNCRONA (espera la URL real antes de responder)
+ * 3. Lanza módulos + lecciones en background asíncrono
+ *
+ * El frontend puede consultar /api/studio/media-status?productId=xxx para
+ * seguir el progreso de las imágenes después de que el endpoint responda.
  */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -67,6 +78,26 @@ export async function POST(request: Request) {
       blueprintId: saved.id,
     });
 
+    const isLeonardoConfigured = new LeonardoProvider().isConfigured();
+    const isCourse = blueprint.productType === "COURSE";
+
+    let coverImageUrl: string | null = null;
+
+    if (isLeonardoConfigured && isCourse) {
+      // ── Portada: síncrona — la URL queda en DB antes de responder ────────
+      coverImageUrl = await generateProductCover(product.id);
+
+      // ── Módulos + lecciones: asíncronas — el frontend hace polling ────────
+      // Usamos setImmediate para separar del ciclo de request y que Node
+      // no cancele la promesa cuando el cliente recibe la respuesta HTTP.
+      setImmediate(() => {
+        Promise.all([
+          generateModuleImages(product.id, { maxModules: 3 }),
+          generateProductImages(product.id, { maxLessons: 6 }),
+        ]).catch((err) => console.error("[materialize] background media error:", err));
+      });
+    }
+
     return NextResponse.json({
       ok: true,
       productId: product.id,
@@ -75,6 +106,8 @@ export async function POST(request: Request) {
       reused,
       quality: quality.score,
       blueprintId: saved.id,
+      coverImageUrl,
+      imageGeneration: isLeonardoConfigured && isCourse ? "generating" : "skipped",
     });
   } catch (error) {
     return NextResponse.json(

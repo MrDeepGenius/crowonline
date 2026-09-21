@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CROW MARKET</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+
+<style>
+  :root{
+    --bg-0:#050507;
+    --bg-1:#08080C;
+    --bg-2:#0D0A14;
+    --violet-1:#6A00FF;
+    --violet-2:#7C3AED;
+    --violet-3:#8B5CF6;
+    --violet-4:#A855F7;
+    --ink:#F7F7FA;
+    --muted:#A1A1AA;
+    --glass-border: rgba(247,247,250,0.08);
+    --glass-bg: rgba(255,255,255,0.03);
+  }
+  *{ box-sizing:border-box; }
+  html,body{ background:var(--bg-0); }
+  body{
+    margin:0;
+    background:var(--bg-0);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .font-display{ font-family:'Unbounded', 'Inter', sans-serif; }
+
+  ::selection{ background:var(--violet-2); color:#fff; }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:var(--bg-0); }
+  ::-webkit-scrollbar-thumb{ background:#1c1626; border-radius:8px; border:2px solid var(--bg-0); }
+  ::-webkit-scrollbar-thumb:hover{ background:#2a1f3d; }
+
+  :focus-visible{ outline:2px solid var(--violet-4); outline-offset:2px; border-radius:4px; }
+
+  .glass{
+    background: var(--glass-bg);
+    border:1px solid var(--glass-border);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+  .glass-strong{
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border:1px solid rgba(247,247,250,0.09);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  .text-gradient{
+    background: linear-gradient(120deg, #F7F7FA 10%, #C9A8FF 45%, #8B5CF6 75%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .btn-primary{
+    background: linear-gradient(135deg, var(--violet-1), var(--violet-4));
+    box-shadow: 0 8px 30px -8px rgba(124,58,237,0.65), inset 0 1px 0 rgba(255,255,255,0.15);
+    transition: transform .25s cubic-bezier(.2,.8,.2,1), box-shadow .25s ease, filter .25s ease;
+  }
+  .btn-primary:hover{ transform: translateY(-2px); filter:brightness(1.08); box-shadow: 0 12px 36px -6px rgba(124,58,237,0.8); }
+  .btn-primary:active{ transform: translateY(0); }
+
+  .btn-ghost{
+    border:1px solid rgba(247,247,250,0.14);
+    background: rgba(255,255,255,0.02);
+    transition: all .2s ease;
+  }
+  .btn-ghost:hover{ background: rgba(255,255,255,0.06); border-color: rgba(168,85,247,0.5); }
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+    border:1px solid rgba(247,247,250,0.07);
+    transition: transform .35s cubic-bezier(.2,.7,.3,1), border-color .35s ease, box-shadow .35s ease;
+  }
+  .card:hover{
+    transform: translateY(-6px);
+    border-color: rgba(168,85,247,0.35);
+    box-shadow: 0 24px 48px -16px rgba(20,6,50,0.65), 0 0 0 1px rgba(139,92,246,0.08);
+  }
+  .card:hover .cover-zoom{ transform: scale(1.06); }
+  .card:hover .quick-actions{ opacity:1; transform: translateY(0); }
+
+  .cover-zoom{ transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+  .quick-actions{ opacity:0; transform: translateY(6px); transition: all .3s ease; }
+
+  @keyframes floatSlow{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(-2%,3%) scale(1.05); }
+  }
+  @keyframes floatSlow2{
+    0%,100%{ transform: translate(0,0) scale(1); }
+    50%{ transform: translate(3%,-2%) scale(1.08); }
+  }
+  .glow-a{ animation: floatSlow 18s ease-in-out infinite; }
+  .glow-b{ animation: floatSlow2 22s ease-in-out infinite; }
+
+  @keyframes drift{
+    from{ transform: translateY(0); opacity:.5; }
+    to{ transform: translateY(-120px); opacity:0; }
+  }
+  .particle{ animation: drift linear infinite; }
+
+  @keyframes fadeInUp{
+    from{ opacity:0; transform: translateY(14px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .reveal{ animation: fadeInUp .6s cubic-bezier(.2,.7,.2,1) both; }
+
+  @keyframes shimmer{
+    0%{ background-position: -400px 0; }
+    100%{ background-position: 400px 0; }
+  }
+  .skel{ background: linear-gradient(90deg,#0e0b15 0%, #16111f 50%, #0e0b15 100%); background-size:800px 100%; animation: shimmer 1.4s infinite linear; }
+
+  .chip{
+    border:1px solid rgba(247,247,250,0.12);
+    background: rgba(255,255,255,0.03);
+    transition: all .2s ease;
+    white-space:nowrap;
+  }
+  .chip:hover, .chip.active{
+    border-color: rgba(168,85,247,0.6);
+    background: linear-gradient(135deg, rgba(106,0,255,0.25), rgba(168,85,247,0.14));
+  }
+
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+
+  .drawer-enter{ animation: slideIn .35s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes slideIn{ from{ transform: translateX(100%); } to{ transform: translateX(0); } }
+  .drawer-enter-left{ animation: slideInLeft .35s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes slideInLeft{ from{ transform: translateX(-100%); } to{ transform: translateX(0); } }
+
+  .overlay-fade{ animation: fadeIn .25s ease both; }
+  @keyframes fadeIn{ from{ opacity:0; } to{ opacity:1; } }
+
+  .scale-pop{ animation: scalePop .3s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes scalePop{ from{ opacity:0; transform: scale(.94); } to{ opacity:1; transform: scale(1); } }
+
+  .bar-fill{ transition: width .8s cubic-bezier(.2,.7,.2,1); }
+
+  .tab-underline{ position:relative; }
+  .tab-underline::after{
+    content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+    background: linear-gradient(90deg, var(--violet-2), var(--violet-4));
+    transform: scaleX(0); transform-origin:left; transition: transform .3s ease;
+  }
+  .tab-underline.active::after{ transform: scaleX(1); }
+
+  .heart-pop.active svg{ animation: heartPop .4s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes heartPop{ 0%{ transform:scale(1);} 40%{ transform:scale(1.4);} 100%{ transform:scale(1);} }
+
+  .accordion-body{ overflow:hidden; transition: max-height .4s cubic-bezier(.2,.7,.2,1); }
+
+  input[type=range]{ -webkit-appearance:none; height:4px; background: rgba(247,247,250,0.12); border-radius:4px; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background: linear-gradient(135deg,var(--violet-2),var(--violet-4)); cursor:pointer; border:2px solid #F7F7FA; }
+
+  .grain{
+    position:absolute; inset:0; opacity:.035; pointer-events:none; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react,env">
+const { useState, useMemo, useEffect, useRef, useCallback, createContext, useContext } = React;
+
+/* ============================= ICONS ============================= */
+const Icon = ({ name, size = 18, className = "", strokeWidth = 1.8 }) => {
+  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", className };
+  const paths = {
+    search: <><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>,
+    heart: <path d="M12 21s-7.5-4.6-10-9.2C.5 8.2 2.6 4.5 6.4 4.2c2-.15 3.9.9 5.6 3 1.7-2.1 3.6-3.15 5.6-3 3.8.3 5.9 4 4.4 7.6C19.5 16.4 12 21 12 21z"/>,
+    heartFill: <path d="M12 21s-7.5-4.6-10-9.2C.5 8.2 2.6 4.5 6.4 4.2c2-.15 3.9.9 5.6 3 1.7-2.1 3.6-3.15 5.6-3 3.8.3 5.9 4 4.4 7.6C19.5 16.4 12 21 12 21z" fill="currentColor"/>,
+    cart: <><circle cx="9" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2 3h2l2.4 12.2a2 2 0 0 0 2 1.8h8.7a2 2 0 0 0 2-1.6L21 8H6"/></>,
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></>,
+    wallet: <><rect x="2" y="6" width="20" height="14" rx="2.5"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4" fill="currentColor" stroke="none"/></>,
+    library: <><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>,
+    chevronDown: <path d="M6 9l6 6 6-6"/>,
+    chevronRight: <path d="M9 6l6 6-6 6"/>,
+    chevronLeft: <path d="M15 6l-6 6 6 6"/>,
+    x: <path d="M18 6L6 18M6 6l12 12"/>,
+    filter: <path d="M4 6h16M7 12h10M10 18h4"/>,
+    sort: <><path d="M4 7h10M4 12h7M4 17h4"/><path d="M17 4v14"/><path d="M14 15l3 3 3-3"/></>,
+    star: <path d="M12 2.6l2.9 6 6.6.7-4.9 4.5 1.3 6.6L12 17l-5.9 3.4 1.3-6.6L2.5 9.3l6.6-.7z" fill="currentColor" stroke="none"/>,
+    starOutline: <path d="M12 2.6l2.9 6 6.6.7-4.9 4.5 1.3 6.6L12 17l-5.9 3.4 1.3-6.6L2.5 9.3l6.6-.7z"/>,
+    check: <path d="M20 6L9 17l-5-5"/>,
+    checkCircle: <><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></>,
+    verified: <><path d="M12 2l2.2 1.4 2.6-.3 1.1 2.4 2.4 1.1-.3 2.6L21.4 11 20 13.2l.3 2.6-2.4 1.1-1.1 2.4-2.6-.3L12 21l-2.2-1.4-2.6.3-1.1-2.4-2.4-1.1.3-2.6L2.6 11 4 8.8l-.3-2.6 2.4-1.1L7.2 2.7l2.6.3z"/><path d="M8.5 12l2.3 2.3 4.7-4.7"/></>,
+    play: <><circle cx="12" cy="12" r="9.5"/><path d="M10 8.5l6 3.5-6 3.5z" fill="currentColor" stroke="none"/></>,
+    video: <><rect x="2.5" y="5.5" width="14" height="13" rx="2"/><path d="M16.5 10l5-3v10l-5-3"/></>,
+    doc: <><path d="M7 2h7l4 4v16H7z"/><path d="M14 2v4h4"/><path d="M9.5 12h5M9.5 15.5h5M9.5 8.5h2"/></>,
+    quiz: <><circle cx="12" cy="12" r="9.5"/><path d="M9.2 9.2a2.8 2.8 0 1 1 3.8 2.6c-.9.4-1.2.9-1.2 1.7"/><circle cx="12" cy="16.8" r=".2" fill="currentColor"/></>,
+    exercise: <><path d="M6 8v8M18 8v8"/><path d="M2 10.5v3M22 10.5v3"/><path d="M6 12h12"/></>,
+    pdfIcon: <><path d="M7 2h7l4 4v16H7z"/><path d="M14 2v4h4"/><text x="8.3" y="15" font-size="6" fill="currentColor" stroke="none" font-family="Arial">PDF</text></>,
+    share: <><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.7l7.4-4.2M8.3 13.3l7.4 4.2"/></>,
+    thumbsUp: <path d="M7 22V11m0 11h10.3a2 2 0 0 0 2-1.7l1.2-7A2 2 0 0 0 18.5 12H14l.9-4.5A2 2 0 0 0 13 5l-6 6.6"/>,
+    thumbsDown: <path d="M17 2v11m0 11l-10.3-.03a2 2 0 0 1-2-1.7l-1.2-7A2 2 0 0 1 5.5 12H10l-.9-4.5A2 2 0 0 1 11 5l6 6.6"/>,
+    menu: <path d="M4 7h16M4 12h16M4 17h16"/>,
+    trend: <><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></>,
+    sparkle: <path d="M12 2l1.6 5.6L19 9l-5.4 1.6L12 16l-1.6-5.4L5 9l5.4-1.4z" fill="currentColor" stroke="none"/>,
+    crown: <path d="M3 8l4 3 5-6 5 6 4-3-1.6 10H4.6z"/>,
+    lock: <><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></>,
+    bolt: <path d="M13 2L4 14h6l-1 8 9-12h-6z" fill="currentColor" stroke="none"/>,
+    shield: <path d="M12 2l8 3.5v5c0 5-3.4 8.7-8 11-4.6-2.3-8-6-8-11v-5z"/>,
+    support: <><circle cx="12" cy="12" r="9.5"/><path d="M8 13a4 4 0 0 0 8 0"/><path d="M9 9h.01M15 9h.01"/></>,
+    gift: <><rect x="3" y="9" width="18" height="12" rx="1.5"/><path d="M3 13h18"/><path d="M12 9v12"/><path d="M12 9C9.5 9 8 7.4 8 5.8 8 4.3 9 3 10.4 3 12 3 12 6 12 9zM12 9c2.5 0 4-1.6 4-3.2C16 4.3 15 3 13.6 3 12 3 12 6 12 9z"/></>,
+    globe: <><circle cx="12" cy="12" r="9.5"/><path d="M2.5 12h19M12 2.5c2.6 2.6 4 6 4 9.5s-1.4 6.9-4 9.5c-2.6-2.6-4-6-4-9.5s1.4-6.9 4-9.5z"/></>,
+    arrowRight: <path d="M5 12h14M13 6l6 6-6 6"/>,
+    grid: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
+    dot: <circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>,
+  };
+  return <svg {...common}>{paths[name] || null}</svg>;
+};
+
+const Stars = ({ rating, size = 13 }) => {
+  const full = Math.floor(rating);
+  const frac = rating - full;
+  return (
+    <span className="inline-flex items-center gap-[2px] text-[var(--violet-4)]">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <span key={i} style={{ position: "relative", display: "inline-block", width: size, height: size }}>
+          <Icon name="starOutline" size={size} className="absolute inset-0 text-white/15" />
+          <span style={{ position: "absolute", inset: 0, overflow: "hidden", width: i < full ? "100%" : i === full ? `${frac * 100}%` : "0%" }}>
+            <Icon name="star" size={size} />
+          </span>
+        </span>
+      ))}
+    </span>
+  );
+};
+
+/* ============================= MOCK DATA MODULE (mock/marketplace-data.ts equivalent) ============================= */
+
+const LOGO_DATA_URI = "data:image/png;base64,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";
+
+const CATEGORIES = [
+  { slug: "ia", label: "IA", count: 214, hue: 262 },
+  { slug: "marketing", label: "Marketing", count: 341, hue: 285 },
+  { slug: "negocios", label: "Negocios", count: 198, hue: 250 },
+  { slug: "diseno", label: "Diseño", count: 276, hue: 300 },
+  { slug: "finanzas", label: "Finanzas", count: 122, hue: 268 },
+  { slug: "productividad", label: "Productividad", count: 165, hue: 280 },
+  { slug: "educacion", label: "Educación", count: 143, hue: 255 },
+  { slug: "tecnologia", label: "Tecnología", count: 302, hue: 272 },
+];
+
+const FORMAT_META = {
+  COURSE: { label: "Curso", icon: "video" },
+  EBOOK: { label: "Ebook", icon: "doc" },
+  PDF: { label: "PDF", icon: "pdfIcon" },
+  "INTERACTIVE WEB": { label: "Web App", icon: "bolt" },
+  "RESOURCE KIT": { label: "Kit", icon: "grid" },
+};
+
+const CREATORS = [
+  { id: "c1", slug: "alex-morgan", name: "Alex Morgan", verified: true, specialty: "IA & Automatización", bio: "Ex Head of AI en una scale-up fintech. Enseño a construir productos con IA que la gente realmente paga.", rating: 4.9, products: 24, students: 18400, sales: 41200, followers: 22800 },
+  { id: "c2", slug: "lucia-fernandez", name: "Lucía Fernández", verified: true, specialty: "Marketing Digital", bio: "10 años liderando growth en marcas D2C. Todo lo que enseño lo probé primero con mi propio presupuesto.", rating: 4.8, products: 18, students: 25600, sales: 58900, followers: 34100 },
+  { id: "c3", slug: "marco-diaz", name: "Marco Díaz", verified: true, specialty: "Diseño de Producto", bio: "Diseñador senior con clientes en 4 continentes. Sistemas de diseño, UI premium y portfolios que consiguen trabajo.", rating: 4.9, products: 12, students: 9800, sales: 21300, followers: 15600 },
+  { id: "c4", slug: "sofia-restrepo", name: "Sofía Restrepo", verified: true, specialty: "Finanzas Personales", bio: "Asesora financiera certificada. Simplifico inversión y ahorro para quienes empiezan de cero.", rating: 4.7, products: 9, students: 14200, sales: 19800, followers: 12300 },
+  { id: "c5", slug: "diego-torres", name: "Diego Torres", verified: false, specialty: "Negocios & Ventas", bio: "Fundador de 3 startups. Comparto los sistemas de ventas que usé para escalar sin equipo comercial.", rating: 4.6, products: 15, students: 11100, sales: 24700, followers: 9400 },
+  { id: "c6", slug: "valentina-ruiz", name: "Valentina Ruiz", verified: true, specialty: "Productividad", bio: "Coach de productividad para founders. Sistemas simples, nada de apps innecesarias.", rating: 4.8, products: 11, students: 16700, sales: 20100, followers: 13900 },
+  { id: "c7", slug: "javier-mendez", name: "Javier Méndez", verified: true, specialty: "Desarrollo Web", bio: "Full-stack con 8 años de experiencia. Enseño a construir y vender productos digitales técnicos.", rating: 4.9, products: 20, students: 21300, sales: 38600, followers: 19200 },
+  { id: "c8", slug: "camila-nunez", name: "Camila Núñez", verified: true, specialty: "Educación", bio: "Pedagoga especializada en diseño instruccional para cursos online de alto impacto.", rating: 4.7, products: 8, students: 7300, sales: 10900, followers: 6800 },
+];
+
+const PRODUCT_SEED = [
+  { title: "AI Mastery: De Cero a Producto", category: "ia", type: "COURSE", creator: "c1", price: 97, oldPrice: 149, badge: "BEST SELLER", level: "Intermedio", language: "Español", duration: "10+ horas" },
+  { title: "Prompt Engineering Profesional", category: "ia", type: "EBOOK", creator: "c1", price: 29, badge: "TRENDING", level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Automatizá tu Negocio con IA", category: "ia", type: "INTERACTIVE WEB", creator: "c1", price: 149, oldPrice: 199, badge: "CROW PICK", level: "Avanzado", language: "Español", duration: "5–10 horas" },
+  { title: "Growth Marketing con Data", category: "marketing", type: "COURSE", creator: "c2", price: 119, oldPrice: 179, badge: "BEST SELLER", level: "Intermedio", language: "Español", duration: "10+ horas" },
+  { title: "Copywriting que Vende", category: "marketing", type: "EBOOK", creator: "c2", price: 24, badge: "NEW", level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Kit de Plantillas para Ads", category: "marketing", type: "RESOURCE KIT", creator: "c2", price: 39, badge: "TRENDING", level: "Principiante", language: "Español", duration: "2–5 horas" },
+  { title: "Sistema de Ventas B2B", category: "negocios", type: "COURSE", creator: "c5", price: 129, badge: "TOP SELLER", level: "Avanzado", language: "Español", duration: "10+ horas" },
+  { title: "Modelo de Negocio en 7 Días", category: "negocios", type: "PDF", creator: "c5", price: 19, level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Negociación Estratégica", category: "negocios", type: "EBOOK", creator: "c5", price: 27, badge: "NEW", level: "Intermedio", language: "Español", duration: "2–5 horas" },
+  { title: "Sistema de Diseño Premium", category: "diseno", type: "COURSE", creator: "c3", price: 139, oldPrice: 189, badge: "CROW PICK", level: "Avanzado", language: "Español", duration: "10+ horas" },
+  { title: "UI Kit: Componentes Glass", category: "diseno", type: "RESOURCE KIT", creator: "c3", price: 45, badge: "BEST SELLER", level: "Intermedio", language: "Español", duration: "2–5 horas" },
+  { title: "Portfolio que Consigue Clientes", category: "diseno", type: "EBOOK", creator: "c3", price: 22, badge: "TRENDING", level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Inversión para Principiantes", category: "finanzas", type: "COURSE", creator: "c4", price: 89, badge: "TOP SELLER", level: "Principiante", language: "Español", duration: "5–10 horas" },
+  { title: "Planilla Maestra de Presupuesto", category: "finanzas", type: "RESOURCE KIT", creator: "c4", price: 15, level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Rutinas de Deep Work", category: "productividad", type: "COURSE", creator: "c6", price: 69, oldPrice: 99, badge: "NEW", level: "Intermedio", language: "Español", duration: "2–5 horas" },
+  { title: "Sistema Notion CROW", category: "productividad", type: "RESOURCE KIT", creator: "c6", price: 34, badge: "TRENDING", level: "Principiante", language: "Español", duration: "< 2 horas" },
+  { title: "Full-Stack con IA Integrada", category: "tecnologia", type: "COURSE", creator: "c7", price: 159, oldPrice: 219, badge: "BEST SELLER", level: "Avanzado", language: "Español", duration: "10+ horas" },
+  { title: "API Design desde Cero", category: "tecnologia", type: "EBOOK", creator: "c7", price: 26, level: "Intermedio", language: "English", duration: "2–5 horas" },
+  { title: "Dashboard Interactivo Boilerplate", category: "tecnologia", type: "INTERACTIVE WEB", creator: "c7", price: 79, badge: "CROW PICK", level: "Avanzado", language: "English", duration: "5–10 horas" },
+  { title: "Diseño Instruccional Efectivo", category: "educacion", type: "COURSE", creator: "c8", price: 99, badge: "TOP SELLER", level: "Intermedio", language: "Español", duration: "5–10 horas" },
+];
+
+function seededRand(seed) {
+  let x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+const PRODUCTS = PRODUCT_SEED.map((p, i) => {
+  const id = `p${i + 1}`;
+  const slug = p.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const rating = +(4.5 + seededRand(i * 3.1) * 0.5).toFixed(1);
+  const reviewsCount = Math.floor(120 + seededRand(i * 7.7) * 3200);
+  const sales = Math.floor(300 + seededRand(i * 11.3) * 9000);
+  const hue = CATEGORIES.find(c => c.slug === p.category).hue + i * 3;
+  const growth = Math.floor(6 + seededRand(i * 5.5) * 42);
+  return {
+    id, slug, ...p, rating, reviewsCount, sales, hue, growth,
+    shortDesc: "Un sistema paso a paso, sin relleno, pensado para aplicar desde el primer día.",
+  };
+});
+
+const CREATOR_BY_ID = Object.fromEntries(CREATORS.map(c => [c.id, c]));
+
+const FEATURED_IDS = ["p1", "p4", "p10", "p13", "p17", "p20", "p3", "p6"];
+const TRENDING_IDS = ["p2", "p6", "p11", "p16", "p12", "p5"];
+const PICKS_IDS = ["p3", "p10", "p19", "p1"];
+const TOP_SELLERS_IDS = [...PRODUCTS].sort((a, b) => b.sales - a.sales).slice(0, 6).map(p => p.id);
+
+const LIBRARY = [
+  { productId: "p1", progress: 72, lastAccess: "Hace 2 días" },
+  { productId: "p11", progress: 34, lastAccess: "Hace 5 días" },
+  { productId: "p17", progress: 91, lastAccess: "Ayer" },
+];
+
+const REVIEW_NAMES = ["Martina G.", "Bruno S.", "Renata L.", "Tomás P.", "Agustina R.", "Iván C.", "Milagros V.", "Fede A.", "Constanza D.", "Nahuel M.", "Julieta B.", "Santiago F."];
+const REVIEW_TEXTS = [
+  "Superó lo que esperaba. Lo apliqué la misma semana y ya vi resultados concretos.",
+  "Contenido denso pero muy bien explicado. Se nota que quien lo hizo lo vivió antes de enseñarlo.",
+  "Me hubiera gustado un poco más de profundidad en la parte final, pero en general vale cada centavo.",
+  "El soporte del creador es excelente, respondió todas mis dudas en menos de un día.",
+  "Estructura clarísima. Ideal para alguien que viene sin experiencia previa.",
+  "Lo recomiendo sin dudar. Ya es el segundo producto que compro de este creador.",
+  "Buenísimo nivel de detalle en los ejemplos prácticos. Muy aplicable a un negocio real.",
+  "Al principio dudé por el precio, pero la calidad justifica completamente la inversión.",
+];
+
+function hashStr(s) { let h = 0; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; }
+
+function generateReviews(productId, count = 6) {
+  return Array.from({ length: count }).map((_, i) => {
+    const seed = hashStr(productId + "-" + i);
+    const name = REVIEW_NAMES[seed % REVIEW_NAMES.length];
+    const text = REVIEW_TEXTS[(seed >> 3) % REVIEW_TEXTS.length];
+    const rating = [5, 5, 5, 4, 5, 4, 3][(seed >> 5) % 7];
+    const helpful = 4 + (seed % 58);
+    const daysAgo = 2 + (seed % 60);
+    return { id: `${productId}-r${i}`, name, text, rating, helpful, verified: seed % 5 !== 0, daysAgo };
+  });
+}
+
+function generateComments(productId, count = 3) {
+  return Array.from({ length: count }).map((_, i) => {
+    const seed = hashStr(productId + "-c" + i);
+    const name = REVIEW_NAMES[(seed >> 2) % REVIEW_NAMES.length];
+    const texts = ["¿El acceso es de por vida o tiene vencimiento?", "¿Se puede aplicar aunque esté recién empezando?", "¿Incluye los archivos fuente o solo el video?", "¿Cada cuánto se actualiza el contenido?"];
+    const text = texts[seed % texts.length];
+    const likes = seed % 24;
+    const hasResponse = i === 0;
+    return { id: `${productId}-cm${i}`, name, text, likes, daysAgo: 1 + (seed % 20), response: hasResponse ? "¡Gracias por preguntar! Sí, el acceso es de por vida e incluye todas las actualizaciones futuras sin costo." : null };
+  });
+}
+
+const COURSE_MODULES = [
+  { title: "Introducción", lessons: [
+    { title: "Bienvenida al programa", type: "video", duration: "4 min" },
+    { title: "Cómo aprovechar este producto", type: "video", duration: "6 min" },
+    { title: "Recursos de la primera semana", type: "pdf", duration: "—" },
+  ]},
+  { title: "Fundamentos", lessons: [
+    { title: "Los principios que nadie explica", type: "video", duration: "18 min" },
+    { title: "Errores comunes al empezar", type: "video", duration: "12 min" },
+    { title: "Ejercicio: tu primer diagnóstico", type: "exercise", duration: "20 min" },
+    { title: "Quiz de fundamentos", type: "quiz", duration: "5 min" },
+  ]},
+  { title: "Estrategia y Ejecución", lessons: [
+    { title: "Diseñando tu plan de acción", type: "video", duration: "22 min" },
+    { title: "Plantilla de ejecución", type: "pdf", duration: "—" },
+    { title: "Caso de estudio real", type: "video", duration: "15 min" },
+  ]},
+  { title: "Escalar y Optimizar", lessons: [
+    { title: "Cómo escalar sin romper el sistema", type: "video", duration: "19 min" },
+    { title: "Ejercicio final integrador", type: "exercise", duration: "30 min" },
+    { title: "Cierre y próximos pasos", type: "video", duration: "8 min" },
+  ]},
+];
+
+const SEARCH_SUGGESTIONS = ["Marketing digital", "Marketing con IA", "Ventas", "Publicidad", "Diseño UI", "Finanzas personales", "Automatización"];
+
+/* ============================= HELPERS ============================= */
+
+function formatNumber(n) {
+  if (n >= 1000) return (n / 1000).toFixed(n % 1000 === 0 ? 0 : 1) + "K";
+  return String(n);
+}
+
+function Cover({ hue, icon, className = "", label }) {
+  const g = `linear-gradient(135deg, hsla(${hue},85%,55%,0.55), hsla(${hue + 45},70%,35%,0.85) 60%, #050507 130%)`;
+  return (
+    <div className={`relative overflow-hidden ${className}`} style={{ background: g }}>
+      <div className="absolute inset-0 opacity-40" style={{ backgroundImage: "radial-gradient(circle at 25% 25%, rgba(255,255,255,0.35), transparent 45%)" }} />
+      <div className="absolute -right-6 -bottom-8 w-32 h-32 rounded-full opacity-30 blur-2xl" style={{ background: `hsl(${hue + 60},80%,60%)` }} />
+      <div className="absolute inset-0 flex items-center justify-center cover-zoom">
+        <Icon name={icon} size={38} className="text-white/85" strokeWidth={1.3} />
+      </div>
+      {label && <div className="absolute bottom-2 left-2 text-[10px] tracking-wide text-white/70 font-medium">{label}</div>}
+    </div>
+  );
+}
+
+function BadgePill({ badge }) {
+  if (!badge) return null;
+  const styles = {
+    "BEST SELLER": "from-[#6A00FF] to-[#A855F7] text-white",
+    "TRENDING": "from-[#7C3AED] to-[#8B5CF6] text-white",
+    "NEW": "bg-white/10 text-white border border-white/25",
+    "CROW PICK": "from-[#A855F7] to-[#6A00FF] text-white",
+    "TOP SELLER": "from-[#8B5CF6] to-[#6A00FF] text-white",
+  };
+  const grad = badge === "NEW" ? styles.NEW : `bg-gradient-to-r ${styles[badge]}`;
+  return <span className={`absolute top-3 left-3 z-10 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide ${grad} shadow-lg shadow-black/40`}>{badge}</span>;
+}
+
+/* ============================= APP CONTEXT ============================= */
+
+const AppCtx = createContext(null);
+const useApp = () => useContext(AppCtx);
+
+/* ============================= SMALL UI PIECES ============================= */
+
+function TrustBadge({ icon, children }) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+      <span className="text-[var(--violet-4)]"><Icon name={icon} size={16} /></span>
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function ProductCard({ product, index = 0 }) {
+  const { favorites, toggleFavorite, goProduct } = useApp();
+  const creator = CREATOR_BY_ID[product.creator];
+  const fmt = FORMAT_META[product.type];
+  const isFav = favorites.includes(product.id);
+  return (
+    <div className="card reveal rounded-2xl overflow-hidden flex flex-col group cursor-pointer" style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }} onClick={() => goProduct(product.slug)}>
+      <div className="relative">
+        <Cover hue={product.hue} icon={fmt.icon} className="h-40 w-full" />
+        <BadgePill badge={product.badge} />
+        <button
+          onClick={(e) => { e.stopPropagation(); toggleFavorite(product.id); }}
+          className={`heart-pop ${isFav ? "active" : ""} absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center glass-strong hover:scale-110 transition-transform`}
+          aria-label="Guardar producto"
+        >
+          <Icon name={isFav ? "heartFill" : "heart"} size={15} className={isFav ? "text-[var(--violet-4)]" : "text-white/80"} />
+        </button>
+        <div className="quick-actions absolute bottom-3 left-3 right-3 z-10 flex gap-2">
+          <button onClick={(e) => { e.stopPropagation(); goProduct(product.slug); }} className="flex-1 text-xs font-semibold py-1.5 rounded-lg glass-strong hover:bg-white/10">Vista rápida</button>
+        </div>
+      </div>
+      <div className="p-4 flex flex-col gap-2 flex-1">
+        <div className="flex items-center justify-between text-[11px] text-[var(--muted)] uppercase tracking-wide">
+          <span>{CATEGORIES.find(c => c.slug === product.category)?.label}</span>
+          <span className="flex items-center gap-1 text-[var(--muted)] normal-case"><Icon name={fmt.icon} size={12} />{fmt.label}</span>
+        </div>
+        <h3 className="font-display text-[15px] leading-snug font-medium text-[var(--ink)]">{product.title}</h3>
+        <p className="text-[13px] text-[var(--muted)] line-clamp-2">{product.shortDesc}</p>
+        <div className="flex items-center gap-2 mt-1">
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-[9px] font-bold">{creator.name[0]}</div>
+          <span className="text-xs text-[var(--muted)]">{creator.name}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-xs">
+          <Stars rating={product.rating} size={12} />
+          <span className="font-semibold text-white">{product.rating}</span>
+          <span className="text-[var(--muted)]">({formatNumber(product.reviewsCount)})</span>
+        </div>
+        <div className="mt-auto pt-2 flex items-end justify-between">
+          <div className="flex items-baseline gap-2">
+            <span className="font-display font-semibold text-lg">${product.price}</span>
+            {product.oldPrice && <span className="text-xs text-[var(--muted)] line-through">${product.oldPrice}</span>}
+          </div>
+          <button onClick={(e) => { e.stopPropagation(); goProduct(product.slug); }} className="text-xs font-semibold px-3 py-1.5 rounded-lg btn-primary text-white">Ver producto</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ eyebrow, title, action }) {
+  return (
+    <div className="flex items-end justify-between mb-6 gap-4 flex-wrap">
+      <div>
+        {eyebrow && <div className="text-xs text-[var(--violet-4)] font-medium mb-1">{eyebrow}</div>}
+        <h2 className="font-display text-2xl md:text-3xl font-medium">{title}</h2>
+      </div>
+      {action}
+    </div>
+  );
+}
+
+function HorizontalScroller({ children }) {
+  const ref = useRef(null);
+  return (
+    <div className="relative -mx-4 px-4 sm:mx-0 sm:px-0">
+      <div ref={ref} className="flex gap-4 overflow-x-auto no-scrollbar pb-2 snap-x">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= HEADER ============================= */
+
+function Header() {
+  const { goHome, goTopCreators, goTopSellers, openSearch, openCart, goLibrary, favorites, cart, goFavorites, mobileNavOpen, setMobileNavOpen } = useApp();
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? "glass-strong shadow-2xl shadow-black/40" : "bg-transparent"}`}>
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
+        <button onClick={goHome} className="font-display text-xl font-bold tracking-tight shrink-0 flex items-center gap-2">
+          <img src={LOGO_DATA_URI} alt="CROW" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-[rgba(124,58,237,0.45)] ring-1 ring-white/10" />
+          <span className="hidden sm:inline">CROW</span>
+        </button>
+        <nav className="hidden lg:flex items-center gap-6 text-sm text-[var(--muted)]">
+          <button onClick={goHome} className="hover:text-white transition-colors">Marketplace</button>
+          <button onClick={goHome} className="hover:text-white transition-colors">Categorías</button>
+          <button onClick={goHome} className="hover:text-white transition-colors">Top Products</button>
+          <button onClick={goTopCreators} className="hover:text-white transition-colors">Top Creators</button>
+          <button onClick={goTopSellers} className="hover:text-white transition-colors">Top Sellers</button>
+        </nav>
+        <button onClick={openSearch} className="flex-1 max-w-xl mx-auto hidden md:flex items-center gap-3 px-4 py-2.5 rounded-full glass text-sm text-[var(--muted)] hover:border-[var(--violet-3)]/50 transition-colors">
+          <Icon name="search" size={16} />
+          <span className="truncate">¿Qué querés aprender, crear o conseguir?</span>
+        </button>
+        <div className="flex items-center gap-1.5 ml-auto">
+          <button onClick={openSearch} className="md:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5"><Icon name="search" size={18} /></button>
+          <button onClick={goFavorites} className="relative w-9 h-9 rounded-full hidden sm:flex items-center justify-center hover:bg-white/5" title="Mi lista">
+            <Icon name="heart" size={18} />
+            {favorites.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[var(--violet-3)] text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{favorites.length}</span>}
+          </button>
+          <button onClick={goLibrary} className="w-9 h-9 rounded-full hidden sm:flex items-center justify-center hover:bg-white/5" title="Mi biblioteca">
+            <Icon name="library" size={18} />
+          </button>
+          <button className="w-9 h-9 rounded-full hidden sm:flex items-center justify-center hover:bg-white/5" title="Wallet">
+            <Icon name="wallet" size={18} />
+          </button>
+          <button onClick={openCart} className="relative w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5" title="Carrito">
+            <Icon name="cart" size={18} />
+            {cart.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[var(--violet-3)] text-[9px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{cart.length}</span>}
+          </button>
+          <button className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5" title="Perfil">
+            <Icon name="user" size={18} />
+          </button>
+          <button onClick={() => setMobileNavOpen(true)} className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/5"><Icon name="menu" size={18} /></button>
+        </div>
+      </div>
+      {mobileNavOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 overlay-fade" onClick={() => setMobileNavOpen(false)}>
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute right-0 top-0 bottom-0 w-72 glass-strong drawer-enter p-6 flex flex-col gap-1" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <span className="font-display font-semibold">Menú</span>
+              <button onClick={() => setMobileNavOpen(false)}><Icon name="x" size={20} /></button>
+            </div>
+            {[["Marketplace", goHome], ["Categorías", goHome], ["Top Creators", goTopCreators], ["Top Sellers", goTopSellers], ["Mi biblioteca", goLibrary], ["Mi lista", goFavorites]].map(([label, fn]) => (
+              <button key={label} onClick={() => { fn(); setMobileNavOpen(false); }} className="text-left py-3 border-b border-white/5 text-sm">{label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+    </header>
+  );
+}
+
+/* ============================= SEARCH OVERLAY ============================= */
+
+function SearchOverlay() {
+  const { searchOpen, closeSearch, goProduct, goCreator } = useApp();
+  const [q, setQ] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => { if (searchOpen) setTimeout(() => inputRef.current?.focus(), 50); else setQ(""); }, [searchOpen]);
+  if (!searchOpen) return null;
+
+  const matchProducts = q.length > 0 ? PRODUCTS.filter(p => p.title.toLowerCase().includes(q.toLowerCase()) || p.category.includes(q.toLowerCase())).slice(0, 5) : PRODUCTS.slice(0, 4);
+  const matchCreators = q.length > 0 ? CREATORS.filter(c => c.name.toLowerCase().includes(q.toLowerCase()) || c.specialty.toLowerCase().includes(q.toLowerCase())).slice(0, 3) : CREATORS.slice(0, 3);
+  const matchCategories = q.length > 0 ? CATEGORIES.filter(c => c.label.toLowerCase().includes(q.toLowerCase())) : CATEGORIES.slice(0, 4);
+
+  return (
+    <div className="fixed inset-0 z-50 overlay-fade">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeSearch} />
+      <div className="relative max-w-3xl mx-auto mt-16 md:mt-24 px-4">
+        <div className="glass-strong rounded-2xl scale-pop overflow-hidden shadow-2xl shadow-black/60">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-white/8">
+            <Icon name="search" size={20} className="text-[var(--violet-4)]" />
+            <input ref={inputRef} value={q} onChange={e => setQ(e.target.value)} placeholder="Buscar productos, creadores, categorías..." className="flex-1 bg-transparent outline-none text-lg placeholder:text-[var(--muted)]" />
+            <button onClick={closeSearch} className="text-[var(--muted)] hover:text-white"><Icon name="x" size={20} /></button>
+          </div>
+          <div className="max-h-[70vh] overflow-y-auto p-5 space-y-6">
+            {q.length === 0 && (
+              <div>
+                <div className="text-xs uppercase tracking-wide text-[var(--muted)] mb-2">Sugerencias</div>
+                <div className="flex flex-wrap gap-2">
+                  {SEARCH_SUGGESTIONS.map(s => <button key={s} onClick={() => setQ(s)} className="chip px-3 py-1.5 rounded-full text-sm">{s}</button>)}
+                </div>
+              </div>
+            )}
+            {matchCategories.length > 0 && (
+              <div>
+                <div className="text-xs uppercase tracking-wide text-[var(--muted)] mb-2">Categorías</div>
+                <div className="flex flex-wrap gap-2">
+                  {matchCategories.map(c => <span key={c.slug} className="chip px-3 py-1.5 rounded-full text-sm cursor-pointer">{c.label} <span className="text-[var(--muted)]">· {c.count}</span></span>)}
+                </div>
+              </div>
+            )}
+            {matchProducts.length > 0 && (
+              <div>
+                <div className="text-xs uppercase tracking-wide text-[var(--muted)] mb-2">Productos</div>
+                <div className="space-y-1">
+                  {matchProducts.map(p => (
+                    <div key={p.id} onClick={() => { goProduct(p.slug); closeSearch(); }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer">
+                      <Cover hue={p.hue} icon={FORMAT_META[p.type].icon} className="w-12 h-12 rounded-lg shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{p.title}</div>
+                        <div className="text-xs text-[var(--muted)]">{CREATOR_BY_ID[p.creator].name} · ${p.price}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {matchCreators.length > 0 && (
+              <div>
+                <div className="text-xs uppercase tracking-wide text-[var(--muted)] mb-2">Creadores</div>
+                <div className="space-y-1">
+                  {matchCreators.map(c => (
+                    <div key={c.id} onClick={() => { goCreator(c.slug); closeSearch(); }} className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-xs font-bold shrink-0">{c.name[0]}</div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate flex items-center gap-1">{c.name}{c.verified && <Icon name="verified" size={12} className="text-[var(--violet-4)]" />}</div>
+                        <div className="text-xs text-[var(--muted)]">{c.specialty}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= HERO ============================= */
+
+function Hero() {
+  const { openSearch, setCategoryFilter, goHome } = useApp();
+  const chips = ["Cursos", "Ebooks", "PDF", "Kits", "Web Apps", "Recursos", "IA", "Marketing", "Negocios", "Diseño"];
+  return (
+    <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-[-10%] left-[10%] w-[38rem] h-[38rem] rounded-full blur-[110px] opacity-30 glow-a" style={{ background: "radial-gradient(circle, var(--violet-1), transparent 70%)" }} />
+        <div className="absolute top-[10%] right-[5%] w-[30rem] h-[30rem] rounded-full blur-[100px] opacity-25 glow-b" style={{ background: "radial-gradient(circle, var(--violet-4), transparent 70%)" }} />
+        <svg className="absolute inset-0 w-full h-full opacity-[0.4]" preserveAspectRatio="none">
+          <defs><pattern id="grid" width="46" height="46" patternUnits="userSpaceOnUse"><path d="M46 0H0V46" fill="none" stroke="rgba(247,247,250,0.035)" /></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#grid)" />
+        </svg>
+        {Array.from({ length: 16 }).map((_, i) => (
+          <span key={i} className="particle absolute rounded-full bg-[var(--violet-4)]" style={{
+            width: 2 + (i % 3), height: 2 + (i % 3), left: `${(i * 6.3) % 100}%`, bottom: `${(i * 11) % 60}%`,
+            animationDuration: `${10 + (i % 6) * 2}s`, animationDelay: `${i * 0.4}s`, opacity: 0.4,
+          }} />
+        ))}
+      </div>
+      <div className="max-w-4xl mx-auto px-4 md:px-8 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs text-[var(--muted)] mb-6 reveal">
+          <Icon name="sparkle" size={13} className="text-[var(--violet-4)]" />
+          Marketplace premium de productos digitales
+        </div>
+        <h1 className="font-display text-[2.2rem] leading-[1.15] md:text-6xl md:leading-[1.1] font-semibold reveal" style={{ animationDelay: "80ms" }}>
+          Descubrí productos digitales que <span className="text-gradient">pueden cambiar</span> lo que hacés.
+        </h1>
+        <p className="mt-5 text-base md:text-lg text-[var(--muted)] reveal" style={{ animationDelay: "160ms" }}>Creá. Aprendé. Vendé. Crecé.</p>
+        <button onClick={openSearch} className="mt-9 w-full max-w-xl mx-auto flex items-center gap-3 px-5 py-4 rounded-2xl glass-strong text-left hover:border-[var(--violet-3)]/50 transition-colors reveal" style={{ animationDelay: "240ms" }}>
+          <Icon name="search" size={20} className="text-[var(--violet-4)] shrink-0" />
+          <span className="text-[var(--muted)] text-sm md:text-base truncate">Buscar cursos, ebooks, kits, IA, marketing...</span>
+          <span className="ml-auto hidden sm:inline-flex btn-primary text-white text-xs font-semibold px-4 py-2 rounded-xl shrink-0">Explorar</span>
+        </button>
+        <div className="mt-7 flex flex-wrap justify-center gap-2 reveal" style={{ animationDelay: "320ms" }}>
+          {chips.map(c => <button key={c} onClick={() => { goHome(); setCategoryFilter(c); }} className="chip px-3.5 py-1.5 rounded-full text-sm text-[var(--muted)] hover:text-white">{c}</button>)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================= CATEGORY GRID ============================= */
+
+function CategoryGrid() {
+  const { setCategoryFilter, categoryScrollRef } = useApp();
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-14">
+      <SectionHeader title="Explorá por categoría" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {CATEGORIES.map((c, i) => (
+          <button key={c.slug} onClick={() => setCategoryFilter(c.label)} className="card reveal relative rounded-2xl overflow-hidden h-32 md:h-40 text-left group" style={{ animationDelay: `${i * 50}ms` }}>
+            <div className="absolute inset-0" style={{ background: `radial-gradient(120% 120% at 20% 0%, hsla(${c.hue},80%,45%,0.35), transparent 60%), linear-gradient(160deg, #0D0A14, #050507)` }} />
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-25 blur-2xl group-hover:opacity-45 transition-opacity" style={{ background: `hsl(${c.hue},80%,55%)` }} />
+            <div className="relative h-full flex flex-col justify-end p-4">
+              <div className="font-display font-medium text-base md:text-lg">{c.label}</div>
+              <div className="text-xs text-[var(--muted)]">{c.count} productos</div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ============================= FEATURED / TRENDING / PICKS (Horizontal) ============================= */
+
+function ProductRow({ ids, eyebrow, title, showGrowth, cta }) {
+  const items = ids.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-10">
+      <SectionHeader eyebrow={eyebrow} title={title} action={cta} />
+      <HorizontalScroller>
+        {items.map((p, i) => (
+          <div key={p.id} className="w-[260px] shrink-0 snap-start">
+            {showGrowth && (
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 mb-2 font-medium">
+                <Icon name="trend" size={13} /> +{p.growth}% esta semana
+              </div>
+            )}
+            <ProductCard product={p} index={i} />
+          </div>
+        ))}
+      </HorizontalScroller>
+    </section>
+  );
+}
+
+function CrowPicksSection() {
+  const items = PICKS_IDS.map(id => PRODUCTS.find(p => p.id === id));
+  return (
+    <section className="relative py-16">
+      <div className="absolute inset-0 -z-10" style={{ background: "linear-gradient(180deg, transparent, rgba(106,0,255,0.06), transparent)" }} />
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-[var(--violet-1)] to-[var(--violet-4)] flex items-center justify-center"><Icon name="crown" size={16} /></span>
+          <span className="text-xs uppercase tracking-wide text-[var(--violet-4)] font-medium">Selección editorial</span>
+        </div>
+        <h2 className="font-display text-2xl md:text-3xl font-medium mb-8">CROW Picks</h2>
+        <div className="grid md:grid-cols-2 gap-5">
+          {items.map((p, i) => {
+            const creator = CREATOR_BY_ID[p.creator];
+            return (
+              <div key={p.id} className="reveal card rounded-2xl overflow-hidden flex flex-col sm:flex-row" style={{ animationDelay: `${i * 80}ms` }}>
+                <Cover hue={p.hue} icon={FORMAT_META[p.type].icon} className="h-36 sm:h-auto sm:w-44 shrink-0" />
+                <div className="p-5 flex flex-col gap-2">
+                  <span className="inline-flex w-fit items-center gap-1 text-[10px] font-semibold tracking-wide px-2 py-1 rounded-full bg-gradient-to-r from-[var(--violet-4)] to-[var(--violet-1)]">
+                    <Icon name="crown" size={10} /> CROW PICK
+                  </span>
+                  <h3 className="font-display text-lg font-medium">{p.title}</h3>
+                  <p className="text-sm text-[var(--muted)] line-clamp-2">{p.shortDesc}</p>
+                  <div className="mt-auto flex items-center justify-between pt-2">
+                    <span className="text-xs text-[var(--muted)]">{creator.name}</span>
+                    <span className="font-display font-semibold">${p.price}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============================= FILTER DRAWER ============================= */
+
+const FILTER_DEFS = {
+  categoria: ["Cursos", "Ebooks", "PDF", "Kits", "Web Apps", "Recursos"],
+  tema: ["IA", "Marketing", "Negocios", "Diseño", "Finanzas", "Productividad", "Educación", "Tecnología"],
+  formato: ["Curso", "Ebook", "PDF", "Kit", "Web", "Bundle"],
+  nivel: ["Principiante", "Intermedio", "Avanzado"],
+  idioma: ["Español", "English", "Português", "Italiano", "中文", "Русский"],
+  duracion: ["< 2 horas", "2–5 horas", "5–10 horas", "10+ horas"],
+};
+
+function FilterCheckGroup({ title, options, selected, onToggle }) {
+  return (
+    <div className="border-b border-white/6 pb-5 mb-5">
+      <div className="text-sm font-semibold mb-3">{title}</div>
+      <div className="space-y-2.5">
+        {options.map(opt => (
+          <label key={opt} className="flex items-center gap-2.5 cursor-pointer group">
+            <span className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${selected.includes(opt) ? "bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] border-transparent" : "border-white/20 group-hover:border-white/40"}`} style={{ width: 18, height: 18 }}>
+              {selected.includes(opt) && <Icon name="check" size={11} className="text-white" />}
+            </span>
+            <input type="checkbox" className="hidden" checked={selected.includes(opt)} onChange={() => onToggle(opt)} />
+            <span className="text-sm text-[var(--muted)] group-hover:text-white transition-colors">{opt}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FilterDrawer() {
+  const { filterOpen, setFilterOpen, filters, setFilters, resultCount } = useApp();
+  const [ratingSel, setRatingSel] = useState(filters.rating);
+  const [priceMax, setPriceMax] = useState(filters.priceMax);
+
+  const toggle = (group, val) => {
+    setFilters(prev => {
+      const cur = prev[group] || [];
+      const next = cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val];
+      return { ...prev, [group]: next };
+    });
+  };
+
+  const clear = () => {
+    setFilters({ categoria: [], tema: [], formato: [], nivel: [], idioma: [], duracion: [], rating: 0, priceMax: 500 });
+    setRatingSel(0); setPriceMax(500);
+  };
+
+  if (!filterOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overlay-fade">
+      <div className="absolute inset-0 bg-black/70" onClick={() => setFilterOpen(false)} />
+      <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[380px] glass-strong drawer-enter flex flex-col">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/8 shrink-0">
+          <h3 className="font-display text-lg font-medium flex items-center gap-2"><Icon name="filter" size={18} />Filtros</h3>
+          <button onClick={() => setFilterOpen(false)}><Icon name="x" size={20} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <FilterCheckGroup title="Categoría" options={FILTER_DEFS.categoria} selected={filters.categoria} onToggle={v => toggle("categoria", v)} />
+          <FilterCheckGroup title="Tema" options={FILTER_DEFS.tema} selected={filters.tema} onToggle={v => toggle("tema", v)} />
+          <div className="border-b border-white/6 pb-5 mb-5">
+            <div className="flex justify-between text-sm font-semibold mb-3"><span>Precio</span><span className="text-[var(--violet-4)]">${priceMax === 500 ? "500+" : priceMax}</span></div>
+            <input type="range" min="0" max="500" step="25" value={priceMax} onChange={e => { setPriceMax(+e.target.value); setFilters(prev => ({ ...prev, priceMax: +e.target.value })); }} className="w-full" />
+            <div className="flex justify-between text-[11px] text-[var(--muted)] mt-1"><span>$0</span><span>$500+</span></div>
+          </div>
+          <div className="border-b border-white/6 pb-5 mb-5">
+            <div className="text-sm font-semibold mb-3">Rating</div>
+            <div className="flex flex-col gap-2">
+              {[5, 4, 3].map(r => (
+                <button key={r} onClick={() => { const v = ratingSel === r ? 0 : r; setRatingSel(v); setFilters(prev => ({ ...prev, rating: v })); }} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-colors ${ratingSel === r ? "border-[var(--violet-4)] bg-white/5" : "border-white/10 hover:bg-white/5"}`}>
+                  <Stars rating={r} size={13} /> <span className="text-[var(--muted)]">{r === 5 ? "5.0" : `${r}.0+`}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <FilterCheckGroup title="Formato" options={FILTER_DEFS.formato} selected={filters.formato} onToggle={v => toggle("formato", v)} />
+          <FilterCheckGroup title="Nivel" options={FILTER_DEFS.nivel} selected={filters.nivel} onToggle={v => toggle("nivel", v)} />
+          <FilterCheckGroup title="Idioma" options={FILTER_DEFS.idioma} selected={filters.idioma} onToggle={v => toggle("idioma", v)} />
+          <FilterCheckGroup title="Duración" options={FILTER_DEFS.duracion} selected={filters.duracion} onToggle={v => toggle("duracion", v)} />
+        </div>
+        <div className="p-5 border-t border-white/8 shrink-0 flex gap-3">
+          <button onClick={clear} className="flex-1 btn-ghost rounded-xl py-3 text-sm font-medium">Limpiar filtros</button>
+          <button onClick={() => setFilterOpen(false)} className="flex-1 btn-primary text-white rounded-xl py-3 text-sm font-semibold">Aplicar ({resultCount})</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= SORT + TOOLBAR ============================= */
+
+const SORT_OPTIONS = ["Recomendados", "Más vendidos", "Mejor valorados", "Más nuevos", "Precio menor", "Precio mayor", "Más populares"];
+
+function SortSelector({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(o => !o)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl glass text-sm hover:border-[var(--violet-3)]/50 transition-colors">
+        <Icon name="sort" size={15} /> <span className="text-[var(--muted)]">Ordenar:</span> <span className="font-medium">{value}</span>
+        <Icon name="chevronDown" size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-2 w-56 glass-strong rounded-xl overflow-hidden z-20 scale-pop shadow-2xl shadow-black/50">
+          {SORT_OPTIONS.map(opt => (
+            <button key={opt} onClick={() => { onChange(opt); setOpen(false); }} className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/8 transition-colors ${value === opt ? "text-[var(--violet-4)] font-medium" : ""}`}>{opt}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================= MARKETPLACE (grid + filters + sort) ============================= */
+
+function useFilteredProducts(filters, sort, categoryFilter) {
+  return useMemo(() => {
+    let list = [...PRODUCTS];
+    const fmtMap = { Cursos: "COURSE", Ebooks: "EBOOK", PDF: "PDF", Kits: "RESOURCE KIT", "Web Apps": "INTERACTIVE WEB", Recursos: "RESOURCE KIT", Curso: "COURSE", Ebook: "EBOOK", Kit: "RESOURCE KIT", Web: "INTERACTIVE WEB", Bundle: "RESOURCE KIT" };
+    const temaMap = { IA: "ia", Marketing: "marketing", Negocios: "negocios", Diseño: "diseno", Finanzas: "finanzas", Productividad: "productividad", Educación: "educacion", Tecnología: "tecnologia" };
+
+    if (categoryFilter) {
+      const asFmt = fmtMap[categoryFilter];
+      const asTema = temaMap[categoryFilter];
+      if (asFmt) list = list.filter(p => p.type === asFmt);
+      else if (asTema) list = list.filter(p => p.category === asTema);
+    }
+    if (filters.categoria?.length) list = list.filter(p => filters.categoria.some(c => fmtMap[c] === p.type));
+    if (filters.tema?.length) list = list.filter(p => filters.tema.some(t => temaMap[t] === p.category));
+    if (filters.formato?.length) list = list.filter(p => filters.formato.some(f => fmtMap[f] === p.type));
+    if (filters.nivel?.length) list = list.filter(p => filters.nivel.includes(p.level));
+    if (filters.idioma?.length) list = list.filter(p => filters.idioma.includes(p.language));
+    if (filters.duracion?.length) list = list.filter(p => filters.duracion.includes(p.duration));
+    if (filters.rating) list = list.filter(p => p.rating >= filters.rating);
+    if (filters.priceMax && filters.priceMax < 500) list = list.filter(p => p.price <= filters.priceMax);
+
+    switch (sort) {
+      case "Más vendidos": list.sort((a, b) => b.sales - a.sales); break;
+      case "Mejor valorados": list.sort((a, b) => b.rating - a.rating); break;
+      case "Más nuevos": list = [...list].reverse(); break;
+      case "Precio menor": list.sort((a, b) => a.price - b.price); break;
+      case "Precio mayor": list.sort((a, b) => b.price - a.price); break;
+      case "Más populares": list.sort((a, b) => b.reviewsCount - a.reviewsCount); break;
+      default: break;
+    }
+    return list;
+  }, [filters, sort, categoryFilter]);
+}
+
+function MarketplaceGrid() {
+  const { filters, setFilterOpen, categoryFilter, setCategoryFilter, setResultCount } = useApp();
+  const [sort, setSort] = useState("Recomendados");
+  const filtered = useFilteredProducts(filters, sort, categoryFilter);
+  useEffect(() => { setResultCount(filtered.length); }, [filtered.length]);
+
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-14">
+      <SectionHeader eyebrow="Catálogo completo" title="Todo el marketplace" />
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <button onClick={() => setFilterOpen(true)} className="flex items-center gap-2 px-4 py-2.5 rounded-xl btn-ghost text-sm font-medium"><Icon name="filter" size={15} />Filtros</button>
+        {categoryFilter && (
+          <span className="chip active flex items-center gap-2 px-3 py-2 rounded-xl text-sm">
+            {categoryFilter}
+            <button onClick={() => setCategoryFilter(null)}><Icon name="x" size={12} /></button>
+          </span>
+        )}
+        <span className="text-sm text-[var(--muted)]">{filtered.length} resultados</span>
+        <div className="ml-auto"><SortSelector value={sort} onChange={setSort} /></div>
+      </div>
+      {filtered.length === 0 ? (
+        <div className="text-center py-20 text-[var(--muted)]">
+          <Icon name="search" size={32} className="mx-auto mb-4 opacity-40" />
+          No encontramos productos con esos filtros. Probá ajustar la búsqueda.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filtered.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ============================= TOP CREATORS ============================= */
+
+function CreatorCard({ creator, index = 0 }) {
+  const { goCreator } = useApp();
+  return (
+    <div onClick={() => goCreator(creator.slug)} className="card reveal rounded-2xl p-6 flex flex-col items-center text-center cursor-pointer" style={{ animationDelay: `${index * 60}ms` }}>
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-2xl font-bold mb-4 relative">
+        {creator.name[0]}
+        {creator.verified && <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[var(--bg-0)] flex items-center justify-center border-2 border-[var(--bg-0)]"><Icon name="verified" size={16} className="text-[var(--violet-4)]" /></span>}
+      </div>
+      <div className="font-display font-medium">{creator.name}</div>
+      <div className="text-xs text-[var(--violet-4)] mb-3">{creator.specialty}</div>
+      <div className="flex items-center gap-1 text-xs mb-4"><Stars rating={creator.rating} size={12} /><span className="font-semibold">{creator.rating}</span></div>
+      <div className="grid grid-cols-3 gap-3 w-full text-center border-t border-white/8 pt-4">
+        <div><div className="font-display font-semibold text-sm">{creator.products}</div><div className="text-[10px] text-[var(--muted)]">Productos</div></div>
+        <div><div className="font-display font-semibold text-sm">{formatNumber(creator.sales)}</div><div className="text-[10px] text-[var(--muted)]">Ventas</div></div>
+        <div><div className="font-display font-semibold text-sm">{formatNumber(creator.followers)}</div><div className="text-[10px] text-[var(--muted)]">Seguidores</div></div>
+      </div>
+      <button className="mt-4 w-full py-2 rounded-lg btn-ghost text-xs font-medium">Ver perfil</button>
+    </div>
+  );
+}
+
+function TopCreatorsPage() {
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
+      <SectionHeader eyebrow="Comunidad CROW" title="Top Creators" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {CREATORS.map((c, i) => <CreatorCard key={c.id} creator={c} index={i} />)}
+      </div>
+    </section>
+  );
+}
+
+function TopCreatorsRow() {
+  const { goTopCreators } = useApp();
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-10">
+      <SectionHeader eyebrow="Comunidad" title="Top Creators" action={<button onClick={goTopCreators} className="text-sm text-[var(--violet-4)] flex items-center gap-1 hover:gap-2 transition-all">Ver todos <Icon name="arrowRight" size={14} /></button>} />
+      <HorizontalScroller>
+        {CREATORS.slice(0, 6).map((c, i) => <div key={c.id} className="w-[230px] shrink-0 snap-start"><CreatorCard creator={c} index={i} /></div>)}
+      </HorizontalScroller>
+    </section>
+  );
+}
+
+/* ============================= TOP SELLERS (ranking) ============================= */
+
+function TopSellersSection({ full }) {
+  const items = TOP_SELLERS_IDS.map(id => PRODUCTS.find(p => p.id === id));
+  const { goProduct, goTopSellers } = useApp();
+  const maxSales = Math.max(...items.map(p => p.sales));
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-14">
+      <SectionHeader eyebrow="Ranking en vivo" title="Top Sellers" action={!full && <button onClick={goTopSellers} className="text-sm text-[var(--violet-4)] flex items-center gap-1 hover:gap-2 transition-all">Ver ranking completo <Icon name="arrowRight" size={14} /></button>} />
+      <div className="glass rounded-2xl divide-y divide-white/6 overflow-hidden">
+        {items.map((p, i) => {
+          const creator = CREATOR_BY_ID[p.creator];
+          return (
+            <div key={p.id} onClick={() => goProduct(p.slug)} className="flex items-center gap-4 p-4 md:p-5 hover:bg-white/[0.03] cursor-pointer transition-colors reveal" style={{ animationDelay: `${i * 40}ms` }}>
+              <div className={`font-display text-xl w-8 shrink-0 ${i < 3 ? "text-gradient font-bold" : "text-[var(--muted)]"}`}>{i + 1}</div>
+              <Cover hue={p.hue} icon={FORMAT_META[p.type].icon} className="w-14 h-14 rounded-xl shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-sm truncate">{p.title}</div>
+                <div className="text-xs text-[var(--muted)]">{creator.name} · {formatNumber(p.sales)} ventas</div>
+                <div className="mt-1.5 h-1.5 rounded-full bg-white/6 overflow-hidden max-w-[220px]">
+                  <div className="h-full rounded-full bar-fill bg-gradient-to-r from-[var(--violet-2)] to-[var(--violet-4)]" style={{ width: `${(p.sales / maxSales) * 100}%` }} />
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-1 text-xs shrink-0"><Stars rating={p.rating} size={12} /><span>{p.rating}</span></div>
+              <div className="font-display font-semibold shrink-0">${p.price}</div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+/* ============================= REVIEWS ============================= */
+
+function RatingBars({ rating, total }) {
+  const dist = [72, 18, 6, 3, 1];
+  return (
+    <div className="space-y-2">
+      {[5, 4, 3, 2, 1].map((star, i) => (
+        <div key={star} className="flex items-center gap-3 text-xs">
+          <span className="w-3 text-[var(--muted)]">{star}</span>
+          <Icon name="star" size={11} className="text-[var(--violet-4)]" />
+          <div className="flex-1 h-2 rounded-full bg-white/6 overflow-hidden"><div className="h-full bar-fill bg-gradient-to-r from-[var(--violet-2)] to-[var(--violet-4)]" style={{ width: `${dist[i]}%` }} /></div>
+          <span className="w-8 text-right text-[var(--muted)]">{dist[i]}%</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReviewCard({ review }) {
+  const [helpful, setHelpful] = useState(review.helpful);
+  const [voted, setVoted] = useState(false);
+  return (
+    <div className="py-5 border-b border-white/6 last:border-0">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-xs font-bold shrink-0">{review.name[0]}</div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm">{review.name}</span>
+            {review.verified && <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded-full"><Icon name="checkCircle" size={10} />Compra verificada</span>}
+            <span className="text-xs text-[var(--muted)] ml-auto sm:ml-0">Hace {review.daysAgo} días</span>
+          </div>
+          <Stars rating={review.rating} size={12} />
+          <p className="text-sm text-[var(--muted)] mt-2 leading-relaxed">{review.text}</p>
+          <div className="flex items-center gap-4 mt-2.5">
+            <button onClick={() => { if (!voted) { setHelpful(h => h + 1); setVoted(true); } }} className={`flex items-center gap-1.5 text-xs ${voted ? "text-[var(--violet-4)]" : "text-[var(--muted)] hover:text-white"}`}>
+              <Icon name="thumbsUp" size={13} /> Útil ({helpful})
+            </button>
+            <button className="text-[var(--muted)] hover:text-white"><Icon name="thumbsDown" size={13} /></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewsSection({ product }) {
+  const [sortMode, setSortMode] = useState("Más recientes");
+  const reviews = useMemo(() => generateReviews(product.id, 6), [product.id]);
+  const sorted = useMemo(() => {
+    const list = [...reviews];
+    if (sortMode === "Más útiles") list.sort((a, b) => b.helpful - a.helpful);
+    if (sortMode === "Mejor puntuadas") list.sort((a, b) => b.rating - a.rating);
+    return list;
+  }, [reviews, sortMode]);
+  const featured = reviews[0];
+
+  return (
+    <div>
+      <h3 className="font-display text-2xl font-medium mb-6">Lo que dice la comunidad</h3>
+      <div className="grid md:grid-cols-[220px_1fr] gap-8 mb-8">
+        <div className="text-center md:text-left">
+          <div className="font-display text-5xl font-semibold">{product.rating}</div>
+          <Stars rating={product.rating} size={16} />
+          <div className="text-sm text-[var(--muted)] mt-1">{formatNumber(product.reviewsCount)} reseñas</div>
+        </div>
+        <RatingBars rating={product.rating} total={product.reviewsCount} />
+      </div>
+
+      <div className="glass rounded-2xl p-6 mb-8 relative overflow-hidden">
+        <div className="absolute -top-4 -left-2 font-display text-8xl text-white/5 select-none">"</div>
+        <Stars rating={5} size={16} />
+        <p className="font-display text-lg mt-3 leading-snug relative">{featured.text}</p>
+        <div className="mt-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-xs font-bold">{featured.name[0]}</div>
+          <div>
+            <div className="text-sm font-medium">{featured.name}</div>
+            <div className="text-xs text-emerald-400">Compra verificada</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 mb-2 flex-wrap">
+        {["Más recientes", "Más útiles", "Mejor puntuadas"].map(s => (
+          <button key={s} onClick={() => setSortMode(s)} className={`chip px-3 py-1.5 rounded-full text-xs ${sortMode === s ? "active text-white" : "text-[var(--muted)]"}`}>{s}</button>
+        ))}
+      </div>
+      <div>{sorted.map(r => <ReviewCard key={r.id} review={r} />)}</div>
+    </div>
+  );
+}
+
+function CommentSection({ product }) {
+  const [comments, setComments] = useState(() => generateComments(product.id, 3));
+  const [text, setText] = useState("");
+  const submit = () => {
+    if (!text.trim()) return;
+    setComments(prev => [{ id: `new-${Date.now()}`, name: "Vos", text, likes: 0, daysAgo: 0, response: null }, ...prev]);
+    setText("");
+  };
+  return (
+    <div className="mt-12">
+      <h3 className="font-display text-2xl font-medium mb-6">Preguntas y comentarios</h3>
+      <div className="flex gap-3 mb-8">
+        <input value={text} onChange={e => setText(e.target.value)} onKeyDown={e => e.key === "Enter" && submit()} placeholder="Escribir comentario..." className="flex-1 glass rounded-xl px-4 py-3 text-sm outline-none focus:border-[var(--violet-3)]/60" />
+        <button onClick={submit} className="btn-primary text-white px-5 rounded-xl text-sm font-semibold">Publicar</button>
+      </div>
+      <div className="space-y-6">
+        {comments.map(c => (
+          <div key={c.id} className="reveal">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-xs font-bold shrink-0">{c.name[0]}</div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2"><span className="text-sm font-medium">{c.name}</span><span className="text-xs text-[var(--muted)]">{c.daysAgo === 0 ? "Ahora" : `Hace ${c.daysAgo}d`}</span></div>
+                <p className="text-sm text-[var(--muted)] mt-1">{c.text}</p>
+                <button className="text-xs text-[var(--muted)] hover:text-white mt-1.5 flex items-center gap-1"><Icon name="thumbsUp" size={12} />{c.likes}</button>
+                {c.response && (
+                  <div className="mt-3 ml-2 pl-4 border-l-2 border-[var(--violet-3)]/50 glass rounded-r-xl p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold">{CREATOR_BY_ID[product.creator].name}</span>
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[var(--violet-2)] to-[var(--violet-4)]">CREATOR</span>
+                    </div>
+                    <p className="text-sm text-[var(--muted)]">{c.response}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= PRODUCT INTELLIGENCE ============================= */
+
+function IntelligenceGauge({ label, value }) {
+  return (
+    <div className="glass rounded-xl p-4">
+      <div className="flex items-end justify-between mb-2">
+        <span className="text-xs text-[var(--muted)]">{label}</span>
+        <span className="font-display font-semibold text-lg">{value}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/6 overflow-hidden">
+        <div className="h-full bar-fill bg-gradient-to-r from-[var(--violet-2)] to-[var(--violet-4)]" style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function ProductIntelligence({ product }) {
+  const seed = hashStr(product.id);
+  const metrics = [
+    ["Product Health", 90 + (seed % 9)],
+    ["Content Quality", 88 + ((seed >> 2) % 11)],
+    ["Market Fit", 85 + ((seed >> 4) % 12)],
+    ["Offer Strength", 87 + ((seed >> 6) % 12)],
+    ["Educational Quality", 86 + ((seed >> 8) % 12)],
+  ];
+  return (
+    <div className="glass-strong rounded-2xl p-6">
+      <div className="flex items-center gap-2 mb-1">
+        <Icon name="bolt" size={16} className="text-[var(--violet-4)]" />
+        <h3 className="font-display font-medium">CROW Intelligence</h3>
+      </div>
+      <p className="text-xs text-[var(--muted)] mb-5">Un análisis automático de la calidad y el potencial de este producto.</p>
+      <div className="grid grid-cols-2 gap-3">
+        {metrics.map(([label, value]) => <IntelligenceGauge key={label} label={label} value={value} />)}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= PRODUCT CONTENT (course modules) ============================= */
+
+function AccordionModule({ mod, index, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const bodyRef = useRef(null);
+  return (
+    <div className="glass rounded-xl overflow-hidden">
+      <button onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between p-4 text-left">
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-[var(--muted)] font-mono">{String(index + 1).padStart(2, "0")}</span>
+          <span className="font-medium text-sm">{mod.title}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-[var(--muted)]">{mod.lessons.length} lecciones</span>
+          <Icon name="chevronDown" size={16} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        </div>
+      </button>
+      <div className="accordion-body" style={{ maxHeight: open ? (bodyRef.current?.scrollHeight || 500) + "px" : "0px" }}>
+        <div ref={bodyRef} className="px-4 pb-4 space-y-1">
+          {mod.lessons.map((l, i) => (
+            <div key={i} className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-white/5">
+              <Icon name={l.type} size={14} className="text-[var(--violet-4)] shrink-0" />
+              <span className="text-sm text-[var(--muted)] flex-1">{l.title}</span>
+              <span className="text-xs text-[var(--muted)]">{l.duration}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= PREVIEW MODAL ============================= */
+
+function PreviewModal({ product, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 overlay-fade flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-2xl glass-strong rounded-2xl overflow-hidden scale-pop">
+        <div className="flex items-center justify-between p-5 border-b border-white/8">
+          <h3 className="font-display font-medium">Vista previa · {product.title}</h3>
+          <button onClick={onClose}><Icon name="x" size={20} /></button>
+        </div>
+        <div className="relative h-64 flex items-center justify-center" style={{ background: `linear-gradient(135deg, hsla(${product.hue},70%,25%,1), #050507)` }}>
+          <button className="w-16 h-16 rounded-full glass-strong flex items-center justify-center hover:scale-110 transition-transform">
+            <Icon name="play" size={26} />
+          </button>
+          <span className="absolute bottom-3 left-3 text-xs px-2 py-1 rounded-full bg-black/50">Lección 01 · Bienvenida</span>
+        </div>
+        <div className="p-5">
+          <p className="text-sm text-[var(--muted)]">Esta es una vista previa gratuita. El acceso completo incluye todos los módulos, recursos descargables y soporte directo del creador.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= PRODUCT DETAIL ============================= */
+
+function ProductTabs({ product }) {
+  const tabs = ["Descripción", "Qué incluye", "Contenido", "Opiniones", "Creador"];
+  const [active, setActive] = useState("Descripción");
+  const creator = CREATOR_BY_ID[product.creator];
+  const includes = [
+    ["12 módulos", "grid"], ["84 lecciones", "video"], ["25 ejercicios", "exercise"], ["50 recursos", "doc"], ["Certificado", "shield"],
+  ];
+  return (
+    <div>
+      <div className="flex gap-6 border-b border-white/8 overflow-x-auto no-scrollbar mb-8">
+        {tabs.map(t => (
+          <button key={t} onClick={() => setActive(t)} className={`tab-underline ${active === t ? "active text-white" : "text-[var(--muted)]"} pb-3 text-sm font-medium whitespace-nowrap`}>{t}</button>
+        ))}
+      </div>
+      {active === "Descripción" && (
+        <div className="prose-sm max-w-none text-[var(--muted)] leading-relaxed space-y-4 text-sm md:text-base">
+          <p>Este producto está diseñado para llevarte de la teoría a la ejecución real, sin relleno ni contenido genérico. Cada sección fue construida a partir de casos reales aplicados por {creator.name}, con foco en resultados medibles desde la primera semana.</p>
+          <p>Vas a encontrar un sistema completo, pensado para que puedas avanzar a tu propio ritmo, con acceso de por vida y actualizaciones incluidas sin costo adicional.</p>
+        </div>
+      )}
+      {active === "Qué incluye" && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {includes.map(([label, icon]) => (
+            <div key={label} className="glass rounded-xl p-4 text-center flex flex-col items-center gap-2">
+              <Icon name={icon} size={20} className="text-[var(--violet-4)]" />
+              <span className="text-xs text-[var(--muted)]">{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {active === "Contenido" && (
+        <div className="space-y-3">
+          {COURSE_MODULES.map((m, i) => <AccordionModule key={i} mod={m} index={i} defaultOpen={i === 0} />)}
+        </div>
+      )}
+      {active === "Opiniones" && <ReviewsSection product={product} />}
+      {active === "Creador" && <CreatorMiniProfile creator={creator} />}
+    </div>
+  );
+}
+
+function CreatorMiniProfile({ creator }) {
+  const { goCreator } = useApp();
+  return (
+    <div className="glass-strong rounded-2xl p-6 flex flex-col sm:flex-row gap-6 items-start">
+      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-2xl font-bold shrink-0">{creator.name[0]}</div>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <h4 className="font-display text-lg font-medium">{creator.name}</h4>
+          {creator.verified && <span className="flex items-center gap-1 text-[10px] text-[var(--violet-4)]"><Icon name="verified" size={13} />CROW VERIFIED</span>}
+        </div>
+        <p className="text-sm text-[var(--muted)] mt-2 max-w-lg">{creator.bio}</p>
+        <div className="flex gap-6 mt-4">
+          <div><div className="font-display font-semibold">{creator.products}</div><div className="text-[11px] text-[var(--muted)]">Productos</div></div>
+          <div><div className="font-display font-semibold">{formatNumber(creator.students)}</div><div className="text-[11px] text-[var(--muted)]">Estudiantes</div></div>
+          <div><div className="font-display font-semibold">{creator.rating}</div><div className="text-[11px] text-[var(--muted)]">Rating</div></div>
+        </div>
+        <button onClick={() => goCreator(creator.slug)} className="mt-4 btn-ghost px-4 py-2 rounded-lg text-sm font-medium">Ver perfil</button>
+      </div>
+    </div>
+  );
+}
+
+function RelatedRow({ title, ids }) {
+  const items = ids.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+  if (!items.length) return null;
+  return (
+    <div className="mt-14">
+      <h3 className="font-display text-xl font-medium mb-5">{title}</h3>
+      <HorizontalScroller>
+        {items.map((p, i) => <div key={p.id} className="w-[240px] shrink-0 snap-start"><ProductCard product={p} index={i} /></div>)}
+      </HorizontalScroller>
+    </div>
+  );
+}
+
+function ProductDetailPage({ slug }) {
+  const { goHome, addToCart, addToLibrary, toggleFavorite, favorites } = useApp();
+  const product = PRODUCTS.find(p => p.slug === slug) || PRODUCTS[0];
+  const creator = CREATOR_BY_ID[product.creator];
+  const fmt = FORMAT_META[product.type];
+  const [preview, setPreview] = useState(false);
+  const isFav = favorites.includes(product.id);
+
+  const relatedSameCat = PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0, 6).map(p => p.id);
+  const alsoViewed = [...PRODUCTS].filter(p => p.id !== product.id).sort((a, b) => b.reviewsCount - a.reviewsCount).slice(0, 6).map(p => p.id);
+  const moreFromCreator = PRODUCTS.filter(p => p.creator === product.creator && p.id !== product.id).map(p => p.id);
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [slug]);
+
+  return (
+    <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-8">
+      {preview && <PreviewModal product={product} onClose={() => setPreview(false)} />}
+      <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-6 flex-wrap">
+        <button onClick={goHome} className="hover:text-white">Marketplace</button>
+        <Icon name="chevronRight" size={12} />
+        <span className="capitalize">{CATEGORIES.find(c => c.slug === product.category)?.label}</span>
+        <Icon name="chevronRight" size={12} />
+        <span className="text-white">{product.title}</span>
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_400px] gap-8 mb-14">
+        <div>
+          <div className="relative rounded-2xl overflow-hidden">
+            <Cover hue={product.hue} icon={fmt.icon} className="h-72 md:h-96 w-full" />
+            <BadgePill badge={product.badge} />
+            <button onClick={() => setPreview(true)} className="absolute bottom-4 left-4 flex items-center gap-2 px-4 py-2.5 rounded-xl glass-strong text-sm font-medium hover:bg-white/10">
+              <Icon name="play" size={16} /> Vista previa
+            </button>
+          </div>
+        </div>
+
+        <div className="glass-strong rounded-2xl p-6 h-fit reveal">
+          <div className="flex items-center gap-2 text-xs text-[var(--muted)] mb-2">
+            <Icon name={fmt.icon} size={13} /> {fmt.label} · {product.level}
+          </div>
+          <h1 className="font-display text-2xl font-medium leading-tight">{product.title}</h1>
+          <div className="flex items-center gap-2 mt-3 text-sm">
+            <Stars rating={product.rating} size={14} />
+            <span className="font-semibold">{product.rating}</span>
+            <span className="text-[var(--muted)]">({formatNumber(product.reviewsCount)} reseñas)</span>
+          </div>
+          <div className="text-xs text-[var(--muted)] mt-1">{formatNumber(product.sales)} ventas</div>
+          <div className="flex items-center gap-2 mt-4 pb-4 border-b border-white/8">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-xs font-bold">{creator.name[0]}</div>
+            <span className="text-sm">{creator.name}</span>
+            {creator.verified && <Icon name="verified" size={13} className="text-[var(--violet-4)]" />}
+          </div>
+
+          <div className="flex items-baseline gap-3 mt-4">
+            <span className="font-display text-3xl font-semibold">${product.price}</span>
+            {product.oldPrice && <>
+              <span className="text-[var(--muted)] line-through">${product.oldPrice}</span>
+              <span className="text-xs font-semibold text-emerald-400">-{Math.round((1 - product.price / product.oldPrice) * 100)}%</span>
+            </>}
+          </div>
+
+          <div className="flex flex-col gap-2.5 mt-5">
+            <button onClick={() => addToCart(product)} className="btn-primary text-white rounded-xl py-3.5 font-semibold text-sm">Comprar ahora</button>
+            <button onClick={() => addToLibrary(product)} className="btn-ghost rounded-xl py-3.5 font-semibold text-sm">Agregar a biblioteca</button>
+            <div className="flex gap-2.5">
+              <button onClick={() => toggleFavorite(product.id)} className={`heart-pop ${isFav ? "active" : ""} flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl btn-ghost text-sm`}>
+                <Icon name={isFav ? "heartFill" : "heart"} size={15} className={isFav ? "text-[var(--violet-4)]" : ""} /> Guardar
+              </button>
+              <button className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl btn-ghost text-sm"><Icon name="share" size={15} />Compartir</button>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-5 border-t border-white/8 space-y-2.5">
+            <TrustBadge icon="bolt">Acceso inmediato</TrustBadge>
+            <TrustBadge icon="checkCircle">Producto verificado</TrustBadge>
+            <TrustBadge icon="lock">Pago seguro</TrustBadge>
+            <TrustBadge icon="support">Soporte del creador</TrustBadge>
+            <TrustBadge icon="shield">Garantía de 7 días</TrustBadge>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-[1fr_320px] gap-10">
+        <ProductTabs product={product} />
+        <div className="space-y-6">
+          <ProductIntelligence product={product} />
+          <CreatorMiniProfile creator={creator} />
+        </div>
+      </div>
+
+      <CommentSection product={product} />
+
+      <RelatedRow title="También podría interesarte" ids={relatedSameCat} />
+      <RelatedRow title="Los compradores también vieron" ids={alsoViewed} />
+      {moreFromCreator.length > 0 && <RelatedRow title={`Más de ${creator.name}`} ids={moreFromCreator} />}
+    </div>
+  );
+}
+
+/* ============================= CREATOR PROFILE PAGE ============================= */
+
+function CreatorProfilePage({ slug }) {
+  const creator = CREATORS.find(c => c.slug === slug) || CREATORS[0];
+  const products = PRODUCTS.filter(p => p.creator === creator.id);
+  const [tab, setTab] = useState("Productos");
+
+  return (
+    <div>
+      <div className="relative h-56 md:h-64 overflow-hidden">
+        <div className="absolute inset-0" style={{ background: "radial-gradient(120% 100% at 30% 0%, rgba(124,58,237,0.35), transparent 60%), linear-gradient(180deg, #0D0A14, #050507)" }} />
+        <div className="grain" />
+      </div>
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 -mt-20">
+        <div className="glass-strong rounded-2xl p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-end">
+          <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-[var(--violet-2)] to-[var(--violet-4)] flex items-center justify-center text-4xl font-bold shrink-0 -mt-16 md:mt-0 border-4 border-[var(--bg-0)]">{creator.name[0]}</div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-2xl font-medium">{creator.name}</h1>
+              {creator.verified && <span className="flex items-center gap-1 text-xs text-[var(--violet-4)] bg-[var(--violet-2)]/10 px-2 py-1 rounded-full"><Icon name="verified" size={13} />CROW VERIFIED</span>}
+            </div>
+            <div className="text-sm text-[var(--violet-4)] mt-1">{creator.specialty}</div>
+            <p className="text-sm text-[var(--muted)] mt-2 max-w-xl">{creator.bio}</p>
+            <div className="flex gap-3 mt-3">
+              {["globe", "share"].map(ic => <span key={ic} className="w-8 h-8 rounded-full glass flex items-center justify-center text-[var(--muted)]"><Icon name={ic} size={14} /></span>)}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 gap-4 md:gap-6 w-full md:w-auto">
+            {[["Productos", creator.products], ["Estudiantes", formatNumber(creator.students)], ["Rating", creator.rating], ["Seguidores", formatNumber(creator.followers)]].map(([l, v]) => (
+              <div key={l} className="text-center"><div className="font-display text-xl font-semibold">{v}</div><div className="text-[11px] text-[var(--muted)]">{l}</div></div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-6 border-b border-white/8 mt-8 mb-8">
+          {["Productos", "Sobre mí", "Reviews"].map(t => (
+            <button key={t} onClick={() => setTab(t)} className={`tab-underline ${tab === t ? "active text-white" : "text-[var(--muted)]"} pb-3 text-sm font-medium`}>{t}</button>
+          ))}
+        </div>
+
+        <div className="pb-16">
+          {tab === "Productos" && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {products.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+            </div>
+          )}
+          {tab === "Sobre mí" && (
+            <div className="max-w-2xl text-sm text-[var(--muted)] leading-relaxed space-y-4">
+              <p>{creator.bio}</p>
+              <p>{creator.name} forma parte del programa CROW VERIFIED, lo que garantiza identidad confirmada, calidad de contenido auditada y soporte activo a la comunidad.</p>
+            </div>
+          )}
+          {tab === "Reviews" && products[0] && <ReviewsSection product={products[0]} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================= LIBRARY / FAVORITES ============================= */
+
+function LibraryPage() {
+  const { library, goProduct } = useApp();
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-14">
+      <SectionHeader eyebrow="Tu espacio" title="Mi biblioteca" />
+      {library.length === 0 ? (
+        <div className="text-center py-24 text-[var(--muted)]"><Icon name="library" size={36} className="mx-auto mb-4 opacity-40" />Todavía no agregaste productos a tu biblioteca.</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {library.map((item, i) => {
+            const p = PRODUCTS.find(pp => pp.id === item.productId);
+            if (!p) return null;
+            return (
+              <div key={item.productId} className="card reveal rounded-2xl overflow-hidden" style={{ animationDelay: `${i * 60}ms` }}>
+                <Cover hue={p.hue} icon={FORMAT_META[p.type].icon} className="h-32 w-full" />
+                <div className="p-5">
+                  <h3 className="font-display font-medium mb-1">{p.title}</h3>
+                  <div className="text-xs text-[var(--muted)] mb-3">Último acceso: {item.lastAccess}</div>
+                  <div className="flex items-center justify-between text-xs mb-1.5"><span className="text-[var(--muted)]">Progreso</span><span className="font-semibold">{item.progress}%</span></div>
+                  <div className="h-2 rounded-full bg-white/6 overflow-hidden mb-4"><div className="h-full bar-fill bg-gradient-to-r from-[var(--violet-2)] to-[var(--violet-4)]" style={{ width: `${item.progress}%` }} /></div>
+                  <button onClick={() => goProduct(p.slug)} className="w-full btn-primary text-white rounded-lg py-2.5 text-sm font-semibold">Continuar</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FavoritesPage() {
+  const { favorites } = useApp();
+  const items = favorites.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
+  return (
+    <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-14">
+      <SectionHeader eyebrow="Tu espacio" title="Mi lista" />
+      {items.length === 0 ? (
+        <div className="text-center py-24 text-[var(--muted)]"><Icon name="heart" size={36} className="mx-auto mb-4 opacity-40" />Todavía no guardaste productos. Tocá el corazón en cualquier card para guardarlo acá.</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {items.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ============================= CART DRAWER ============================= */
+
+function CartDrawer() {
+  const { cartOpen, setCartOpen, cart, removeFromCart } = useApp();
+  if (!cartOpen) return null;
+  const subtotal = cart.reduce((s, p) => s + p.oldPrice ? s + p.price : s + p.price, 0);
+  const totalOld = cart.reduce((s, p) => s + (p.oldPrice || p.price), 0);
+  const discount = totalOld - subtotal;
+
+  return (
+    <div className="fixed inset-0 z-50 overlay-fade">
+      <div className="absolute inset-0 bg-black/70" onClick={() => setCartOpen(false)} />
+      <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[420px] glass-strong drawer-enter flex flex-col">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
+          <h3 className="font-display text-lg font-medium flex items-center gap-2"><Icon name="cart" size={18} />Tu compra</h3>
+          <button onClick={() => setCartOpen(false)}><Icon name="x" size={20} /></button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-6">
+          {cart.length === 0 ? (
+            <div className="text-center py-16 text-[var(--muted)]"><Icon name="cart" size={32} className="mx-auto mb-3 opacity-40" />Tu carrito está vacío.</div>
+          ) : (
+            <div className="space-y-4">
+              {cart.map((p, i) => (
+                <div key={p.id + i} className="flex items-center gap-3">
+                  <Cover hue={p.hue} icon={FORMAT_META[p.type].icon} className="w-14 h-14 rounded-xl shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{p.title}</div>
+                    <div className="text-xs text-[var(--muted)]">{CREATOR_BY_ID[p.creator].name}</div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-semibold text-sm">${p.price}</div>
+                    {p.oldPrice && <div className="text-[10px] text-[var(--muted)] line-through">${p.oldPrice}</div>}
+                  </div>
+                  <button onClick={() => removeFromCart(i)} className="text-[var(--muted)] hover:text-white shrink-0"><Icon name="x" size={14} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {cart.length > 0 && (
+          <div className="p-6 border-t border-white/8 space-y-3">
+            <div className="flex justify-between text-sm text-[var(--muted)]"><span>Subtotal</span><span>${totalOld}</span></div>
+            {discount > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Descuento</span><span>-${discount}</span></div>}
+            <div className="flex justify-between font-display text-lg font-semibold pt-2 border-t border-white/8"><span>Total</span><span>${subtotal}</span></div>
+            <div className="flex items-center gap-2 mt-3 px-3 py-2.5 rounded-xl glass text-sm">
+              <span className="w-6 h-6 rounded-full bg-emerald-500/20 flex items-center justify-center text-[10px] font-bold text-emerald-400">$</span>
+              Método: USDT
+            </div>
+            <button className="w-full btn-primary text-white rounded-xl py-3.5 font-semibold text-sm mt-2">Continuar al pago</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============================= FOOTER ============================= */
+
+function Footer() {
+  return (
+    <footer className="border-t border-white/6 mt-20">
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-12 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
+        <div className="col-span-2">
+          <div className="font-display text-lg font-bold mb-3 flex items-center gap-2"><span className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--violet-1)] to-[var(--violet-4)] flex items-center justify-center text-xs">C</span>CROW</div>
+          <p className="text-[var(--muted)] max-w-xs">El marketplace premium de productos digitales. Descubrí, aprendé y vendé en un solo lugar.</p>
+        </div>
+        {[["Marketplace", ["Categorías", "Top Products", "Top Creators", "Top Sellers"]], ["Creadores", ["Vender en CROW", "CROW Verified", "Recursos"]], ["Soporte", ["Centro de ayuda", "Garantías", "Contacto"]]].map(([title, links]) => (
+          <div key={title}>
+            <div className="font-medium mb-3">{title}</div>
+            <div className="flex flex-col gap-2 text-[var(--muted)]">{links.map(l => <span key={l} className="hover:text-white cursor-pointer">{l}</span>)}</div>
+          </div>
+        ))}
+      </div>
+      <div className="max-w-[1400px] mx-auto px-4 md:px-8 py-6 border-t border-white/6 text-xs text-[var(--muted)] flex justify-between flex-wrap gap-2">
+        <span>© 2026 CROW MARKET. Todo el contenido es data de demostración.</span>
+        <span>Diseño visual — listo para conectar al backend real.</span>
+      </div>
+    </footer>
+  );
+}
+
+/* ============================= APP ROOT ============================= */
+
+function App() {
+  const [view, setView] = useState({ name: "home", param: null });
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [favorites, setFavorites] = useState(["p1", "p10"]);
+  const [cart, setCart] = useState([]);
+  const [library, setLibrary] = useState(LIBRARY);
+  const [categoryFilter, setCategoryFilterState] = useState(null);
+  const [resultCount, setResultCount] = useState(PRODUCTS.length);
+  const [filters, setFilters] = useState({ categoria: [], tema: [], formato: [], nivel: [], idioma: [], duracion: [], rating: 0, priceMax: 500 });
+
+  const navigate = (name, param = null) => { setView({ name, param }); window.scrollTo({ top: 0, behavior: "smooth" }); };
+
+  const ctx = {
+    goHome: () => navigate("home"),
+    goProduct: (slug) => navigate("product", slug),
+    goCreator: (slug) => navigate("creator", slug),
+    goTopCreators: () => navigate("topCreators"),
+    goTopSellers: () => navigate("topSellers"),
+    goLibrary: () => navigate("library"),
+    goFavorites: () => navigate("favorites"),
+    searchOpen, openSearch: () => setSearchOpen(true), closeSearch: () => setSearchOpen(false),
+    filterOpen, setFilterOpen,
+    cartOpen, setCartOpen, openCart: () => setCartOpen(true),
+    mobileNavOpen, setMobileNavOpen,
+    favorites, toggleFavorite: (id) => setFavorites(f => f.includes(id) ? f.filter(x => x !== id) : [...f, id]),
+    cart, addToCart: (p) => setCart(c => [...c, p]), removeFromCart: (i) => setCart(c => c.filter((_, idx) => idx !== i)),
+    library, addToLibrary: (p) => setLibrary(l => l.find(x => x.productId === p.id) ? l : [...l, { productId: p.id, progress: 0, lastAccess: "Ahora" }]),
+    categoryFilter, setCategoryFilter: setCategoryFilterState,
+    filters, setFilters,
+    resultCount, setResultCount,
+  };
+
+  return (
+    <AppCtx.Provider value={ctx}>
+      <Header />
+      <SearchOverlay />
+      <FilterDrawer />
+      <CartDrawer />
+
+      {view.name === "home" && (
+        <>
+          <Hero />
+          <CategoryGrid />
+          <ProductRow eyebrow="Curaduría CROW" title="Elegidos para vos" ids={FEATURED_IDS} />
+          <MarketplaceGrid />
+          <ProductRow eyebrow="En crecimiento" title="Ahora está pasando" ids={TRENDING_IDS} showGrowth />
+          <CrowPicksSection />
+          <TopSellersSection />
+          <TopCreatorsRow />
+        </>
+      )}
+      {view.name === "product" && <ProductDetailPage slug={view.param} />}
+      {view.name === "creator" && <CreatorProfilePage slug={view.param} />}
+      {view.name === "topCreators" && <TopCreatorsPage />}
+      {view.name === "topSellers" && <TopSellersSection full />}
+      {view.name === "library" && <LibraryPage />}
+      {view.name === "favorites" && <FavoritesPage />}
+
+      <Footer />
+    </AppCtx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

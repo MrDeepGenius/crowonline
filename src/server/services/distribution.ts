@@ -1,6 +1,7 @@
-import prisma from "@/lib/db";
+import prisma, { paymentTransaction } from "@/lib/db";
 import { computeSplit, DEFAULT_SPLIT, type TreasuryReason, type SplitLine } from "@/lib/commissions";
 import { creditWallet, makeReference } from "@/server/services/wallet";
+import { TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
 import { resolveUpline } from "@/server/services/affiliate";
 import { enrollUser } from "@/server/services/learning";
 
@@ -25,7 +26,7 @@ function parseSnapshot(raw: string | null): CommissionSnapshotLine[] {
 /**
  * Distributes one paid order across the CROW commercial matrix (exactly 100%):
  * Creator 45% · CROW 10% · Direct affiliate 30% · L1 5% · L2 3% · L3 2% ·
- * L4 2% · L5 1% · Rewards Pool 2%.
+ * L4 2% · L5 1% · Emergency Reserve permanente 2%.
  *
  * PLATFORM is always 10%. Unassignable commissions are recorded separately as
  * CROW_TREASURY with the original role, beneficiary, reason and sale reference.
@@ -35,18 +36,34 @@ function parseSnapshot(raw: string | null): CommissionSnapshotLine[] {
  * distribution is skipped and the stored snapshot is returned, so a retried
  * webhook or a double admin confirmation can never pay out twice.
  *
- * Emergency Reserve is only used in the first-L1-unlock exception
- * (2.5% affiliate + 2.5% reserve) and never forms part of the permanent split.
- * Rewards Pool and Emergency Reserve are CROW buckets: they are recorded as
+ * Emergency Reserve: permanent 2% plus the first-L1-unlock exception
+ * (2.5% affiliate + 2.5% additional reserve, identified by level=1).
+ * Emergency Reserve and Treasury are CROW buckets recorded as
  * Transactions (never as user commissions or wallet balances).
  * Crow Points are volume points, not money: they stay on the Affiliate record.
  */
 export async function distributeCommissions(orderId: string) {
+  return paymentTransaction(() => distributePaidOrder(orderId));
+}
+
+async function distributePaidOrder(orderId: string) {
+  const previous = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+  // Claim inside the transaction also covers distributions where every
+  // beneficiary routes to Treasury and no Commission rows are created.
+  const claimed = await prisma.order.updateMany({
+    where: { id: orderId, status: "PAID", settledAt: null }, data: { settledAt: new Date() },
+  });
+  if (!claimed.count) {
+    if (previous.status !== "PAID") throw new Error("Solo se distribuyen ventas pagadas");
+    const settled = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+    return parseSnapshot(settled.commissionSnapshot);
+  }
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    include: { items: true },
+    include: { items: true, payment: true },
   });
   if (!order) throw new Error("Orden no encontrada");
+  if (order.status !== "PAID") throw new Error("Solo se distribuyen ventas pagadas");
 
   const alreadyDistributed = await prisma.commission.findFirst({
     where: { orderId },
@@ -56,6 +73,7 @@ export async function distributeCommissions(orderId: string) {
     return parseSnapshot(order.commissionSnapshot);
   }
 
+  const isTest = order.payment?.provider === TEST_PAYMENT_PROVIDER;
   const { affiliate, upline } = await resolveUpline(order.referralCode);
   const snapshot: CommissionSnapshotLine[] = [];
 
@@ -110,12 +128,13 @@ export async function distributeCommissions(orderId: string) {
           data: {
             reference: makeReference(isReserve ? "CROW-RSV" : isTreasury ? "CROW-TRY" : "CROW-RWP"),
             kind: "ADJUSTMENT",
-            status: "COMPLETED",
+            status: isTest ? "TEST" : "COMPLETED",
             amountUsdt: line.amount,
             orderId: order.id,
             metadata: JSON.stringify({
+              mode: isTest ? "TEST" : "BLOCKCHAIN",
               bucket: line.role,
-              reason: isTreasury ? line.reason : isReserve ? "first_l1_unlock" : "product_sale",
+              reason: isTreasury ? line.reason : line.level === 1 ? "first_l1_unlock" : "product_sale",
               sourceRole: line.sourceRole,
               beneficiaryId: line.beneficiaryId,
               rate: line.rate,
@@ -127,7 +146,7 @@ export async function distributeCommissions(orderId: string) {
           },
         });
 
-        if (isReserve && directAffiliate) {
+        if (isReserve && line.level === 1 && directAffiliate && !isTest) {
           await prisma.affiliate.update({
             where: { id: directAffiliate.id },
             data: {
@@ -149,8 +168,8 @@ export async function distributeCommissions(orderId: string) {
           level: line.level ?? null,
           rate: line.rate,
           amountUsdt: line.amount,
-          status: "AVAILABLE",
-          reference: makeReference("CROW-CM"),
+          status: isTest ? "TEST" : "CONFIRMED",
+          reference: `PRODUCT:${order.id}:${item.id}:${line.userId}:${line.role}:${line.level ?? 0}`,
         },
       });
 
@@ -171,7 +190,7 @@ export async function distributeCommissions(orderId: string) {
       });
     }
 
-    if (directAffiliate) {
+    if (directAffiliate && !isTest) {
       const directEarnings = split.lines
         .filter((line) => line.userId === directAffiliate.userId)
         .reduce((sum, line) => sum + line.amount, 0);
@@ -187,7 +206,7 @@ export async function distributeCommissions(orderId: string) {
       });
     }
 
-    await prisma.product.update({
+    if (!isTest) await prisma.product.update({
       where: { id: item.productId },
       data: {
         salesCount: { increment: 1 },
@@ -200,7 +219,7 @@ export async function distributeCommissions(orderId: string) {
 
   await prisma.order.update({
     where: { id: order.id },
-    data: { commissionSnapshot: JSON.stringify(snapshot) },
+    data: { commissionSnapshot: JSON.stringify(snapshot), settledAt: new Date() },
   });
 
   return snapshot;

@@ -8,22 +8,54 @@ import {
   type ProductBlueprint,
 } from "@/lib/ai/blueprint";
 import { askProviders } from "@/lib/ai/providers";
+import { runPipeline } from "@/lib/ai/pipeline";
 import { createProductFromBlueprint } from "@/server/services/product-writes";
 import { getCreatorPlan } from "@/lib/plans";
 
 export type StudioGeneration = {
   blueprint: ProductBlueprint;
   provider: string;
-  mode: "live" | "demo";
+  mode: "live" | "skeleton";
   notes: string[];
 };
 
-/** IDEA → IA → PRODUCTO. Always returns a usable blueprint. */
+/**
+ * IDEA → AI → BLUEPRINT (modular pipeline).
+ * Tries the modular pipeline first (structure + per-module content).
+ * Only falls back to skeleton when NO provider is configured or all fail.
+ */
 export async function generateBlueprintFromIdea(
   idea: string,
   productType?: string,
 ): Promise<StudioGeneration> {
   const notes: string[] = [];
+
+  // Build a minimal spec from the idea string
+  const spec = {
+    topic: idea,
+    productType: (productType as "COURSE" | "EBOOK" | "PDF" | "INTERACTIVE_WEB" | "RESOURCE_KIT" | undefined) ?? "COURSE",
+    moduleCount: 5,
+    hasImages: true,
+    hasVideos: true,
+    hasExercises: true,
+    hasQuizzes: true,
+    hasCertificate: true,
+    hasResources: true,
+  };
+
+  try {
+    const result = await runPipeline(spec);
+    if (result && result.mode === "live") {
+      notes.push(`Blueprint generado con pipeline modular (${result.provider}).`);
+      notes.push(result.steps.join(" | "));
+      return { blueprint: result.blueprint, provider: result.provider, mode: "live", notes };
+    }
+  } catch (err) {
+    console.error("[creator] pipeline failed:", err);
+    notes.push(`Pipeline falló: ${err instanceof Error ? err.message : "unknown error"}`);
+  }
+
+  // Fallback: try monolithic generation
   const answer = await askProviders(
     [{ role: "user", content: buildBlueprintPrompt(idea, productType) }],
     { temperature: 0.65, maxTokens: 4096, json: true },
@@ -32,20 +64,20 @@ export async function generateBlueprintFromIdea(
   if (answer) {
     const parsed = parseBlueprint(extractJson(answer.text));
     if (parsed) {
-      notes.push(`Blueprint generado con ${answer.provider} (${answer.model}).`);
+      notes.push(`Blueprint generado con ${answer.provider} (${answer.model}) [monolithic].`);
       return { blueprint: parsed, provider: answer.provider, mode: "live", notes };
     }
     notes.push(
-      `Respuesta de ${answer.provider} no era un blueprint válido; se usó el motor demo de CROW.`,
+      `Respuesta de ${answer.provider} no era un blueprint válido; se usó el esqueleto básico.`,
     );
   } else {
     notes.push(
-      "No hay proveedor de IA configurado (GROQ_API_KEY / NVIDIA_API_KEY). Se usó el motor demo de CROW.",
+      "No hay proveedor de IA configurado (GROQ_API_KEY / NVIDIA_API_KEY). Se usó el esqueleto básico.",
     );
   }
 
-  const demo = buildDemoBlueprint(idea);
-  return { blueprint: demo.blueprint, provider: "crow-demo", mode: "demo", notes };
+  const skeleton = buildDemoBlueprint(idea);
+  return { blueprint: skeleton.blueprint, provider: "crow-skeleton", mode: "skeleton", notes };
 }
 
 export async function saveBlueprint({
@@ -112,14 +144,30 @@ export async function getPlanUsage(creatorId: string) {
     }),
   ]);
 
-  const plan = getCreatorPlan(user?.creatorPlan?.plan ?? "START");
+  const subscription = user?.creatorPlan ?? null;
+
+  // La vigencia se evalúa en el backend: un plan vencido degrada a límites de
+  // START y se marca EXPIRED para que los límites no queden activos de por vida.
+  const isExpired =
+    !!subscription?.expiresAt && new Date(subscription.expiresAt) < new Date();
+  if (isExpired && subscription && subscription.status === "ACTIVE") {
+    await prisma.creatorSubscription.update({
+      where: { userId: creatorId },
+      data: { status: "EXPIRED" },
+    });
+    subscription.status = "EXPIRED";
+  }
+  const effectivePlan = isExpired ? getCreatorPlan("START") : getCreatorPlan(subscription?.plan);
+
+  const plan = effectivePlan;
   const total = counts.reduce((sum, row) => sum + row._count._all, 0);
   const published =
     counts.find((row) => row.status === "PUBLISHED")?._count._all ?? 0;
 
   return {
     plan,
-    subscription: user?.creatorPlan ?? null,
+    subscription,
+    expired: isExpired,
     used: total,
     published,
     canCreateProduct: total < plan.productLimit,

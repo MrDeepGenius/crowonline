@@ -5,7 +5,7 @@ export type AssistantResult = {
   reply: string;
   blueprint: ProductBlueprint;
   provider: string;
-  mode: "live" | "demo";
+  mode: "live" | "skeleton";
 };
 
 export function mergeBlueprint(
@@ -109,8 +109,8 @@ Reglas:
   return {
     reply: demoReply(message, blueprint),
     blueprint,
-    provider: "crow-demo",
-    mode: "demo",
+    provider: "crow-skeleton",
+    mode: "skeleton",
   };
 }
 

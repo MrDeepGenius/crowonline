@@ -39,6 +39,13 @@ export default async function CreatorPlansPage({
         </p>
       ) : null}
 
+      {usage.expired ? (
+        <p className="mb-5 rounded-xl border border-crow-warn/30 bg-crow-warn/10 px-4 py-3 text-[12.5px] text-crow-warn">
+          Tu suscripción anterior venció. Selecciona un plan para reactivar tus
+          límites de creación y publicación.
+        </p>
+      ) : null}
+
       <PlanCards
         highlightPlan={usage.plan.id}
         ctaHref="/creator/plans/select"

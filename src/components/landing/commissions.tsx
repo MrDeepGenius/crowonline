@@ -1,6 +1,6 @@
 import { SectionTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DEFAULT_SPLIT, REWARDS_POOL_RATE, splitPercent } from "@/lib/commissions";
+import { DEFAULT_SPLIT, splitPercent } from "@/lib/commissions";
 
 const LEVEL_COPY: Record<string, string> = {
   Creator: "Pago base por cada venta de su producto",
@@ -71,13 +71,13 @@ export function LandingCommissions() {
 
           <div className="mt-6 space-y-3 border-t border-white/[0.06] pt-5 text-[12.5px] leading-relaxed text-crow-muted">
             <p>
-              <span className="text-crow-text">Emergency Reserve:</span> no forma parte
-              de la distribución permanente. Solo existe como excepción del primer
-              desbloqueo de L1 — 2.5% para el afiliado y 2.5% a reserva.
+              <span className="text-crow-text">Emergency Reserve:</span> 2% permanente
+              en ventas de productos. En la primera apertura de L1 se añaden 2.5%
+              a reserva y los otros 2.5% de L1 van al afiliado.
             </p>
             <p>
-              <span className="text-crow-text">Rewards Pool:</span>{" "}
-              {splitPercent(REWARDS_POOL_RATE)} proveniente de ventas de licencias.
+              Licencias: 15% directo / 85% CROW. Founder: afiliado 10%, fundador 15%,
+              creador 10%. Ninguno de estos dos sistemas genera residual.
             </p>
             <p>
               <span className="text-crow-text">Crow Points (CP):</span> 1 CP = 1 punto

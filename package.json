@@ -12,8 +12,17 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma db push --force-reset && prisma db seed",
     "db:studio": "prisma studio",
+    "payments:monitor": "tsx scripts/payments-monitor.ts",
+    "payments:check": "tsx scripts/payments-monitor.ts --check",
+    "test:payment-mode": "tsx scripts/test-payment-mode.ts",
+    "test:payments": "tsx scripts/test-payments.ts",
     "test:commissions": "tsx scripts/test-commissions.ts",
     "test:attribution": "tsx scripts/test-attribution.ts",
+    "test:boost": "tsx scripts/test-boost.ts",
+    "test:licenses": "tsx scripts/test-licenses.ts",
+    "test:founder": "tsx scripts/test-founder.ts",
+    "test:matrix": "tsx scripts/test-product-matrix.ts",
+    "test:affiliate-guards": "tsx scripts/test-affiliate-guards.ts",
     "setup": "prisma db push && prisma db seed"
   },
   "prisma": {
@@ -28,6 +37,7 @@
     "next": "^15.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-markdown": "^9.1.0",
     "tailwind-merge": "^2.6.0",
     "zod": "^3.24.1"
   },

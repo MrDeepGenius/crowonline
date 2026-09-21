@@ -1,4 +1,5 @@
 import prisma from "@/lib/db";
+import { TEST_PAYMENT_PROVIDER } from "@/server/payments/test-mode";
 import { WALLET_TYPE_LABEL, type WalletTransactionType } from "@/lib/domain";
 
 export const MIN_WITHDRAWAL_USDT = 25;
@@ -37,6 +38,18 @@ async function applyLedgerEntry(
   const amount = Math.abs(Number(input.amountUsdt) || 0);
   if (amount <= 0) return { wallet, transaction: null };
 
+  // Persisted provenance, NOT an ENV check: TEST credits stay non-withdrawable
+  // after the flag is disabled or the application runs in production.
+  const payment = input.orderId ? await prisma.payment.findUnique({ where: { orderId: input.orderId }, select: { provider: true } }) : null;
+  if (payment?.provider === TEST_PAYMENT_PROVIDER) {
+    const transaction = await prisma.walletTransaction.create({ data: {
+      walletId: wallet.id, userId: input.userId, type: input.type, direction,
+      amountUsdt: amount, balanceAfterUsdt: wallet.availableUsdt, status: "TEST",
+      reference: input.reference ?? makeReference("CROW-TEST"),
+      description: `TEST MODE · NO RETIRABLE · ${input.description}`, orderId: input.orderId,
+    } });
+    return { wallet, transaction };
+  }
   const delta = direction === "CREDIT" ? amount : -amount;
   const available = Math.max(0, wallet.availableUsdt + delta);
   const totalEarned =

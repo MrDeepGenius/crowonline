@@ -1,14 +1,28 @@
 import prisma from "@/lib/db";
 import { parseJson } from "@/lib/utils";
+import { expireBoosts } from "@/server/services/boost";
+
+export type MarketplaceSort =
+  | "recent"
+  | "sales"
+  | "price-asc"
+  | "price-desc"
+  | "rating";
 
 export type MarketplaceFilters = {
   q?: string;
   category?: string;
   type?: string;
-  sort?: "recent" | "price-asc" | "price-desc" | "rating";
+  sort?: MarketplaceSort;
   creatorId?: string;
   limit?: number;
 };
+
+const CARD_INCLUDE = {
+  boosts: { where: { status: "ACTIVE" }, select: { status: true, expiresAt: true } },
+  creator: { select: { id: true, name: true } },
+  course: { select: { id: true, durationMin: true } },
+} as const;
 
 export async function listMarketplaceProducts(filters: MarketplaceFilters = {}) {
   const where: Record<string, unknown> = { status: "PUBLISHED" };
@@ -28,24 +42,46 @@ export async function listMarketplaceProducts(filters: MarketplaceFilters = {}) 
   }
 
   const orderBy =
-    filters.sort === "price-asc"
-      ? { priceUsdt: "asc" as const }
-      : filters.sort === "price-desc"
-        ? { priceUsdt: "desc" as const }
-        : filters.sort === "rating"
-          ? { ratingAvg: "desc" as const }
-          : { createdAt: "desc" as const };
+    filters.sort === "sales"
+      ? { salesCount: "desc" as const }
+      : filters.sort === "price-asc"
+        ? { priceUsdt: "asc" as const }
+        : filters.sort === "price-desc"
+          ? { priceUsdt: "desc" as const }
+          : filters.sort === "rating"
+            ? { ratingAvg: "desc" as const }
+            : { createdAt: "desc" as const };
 
   return prisma.product.findMany({
     where,
     orderBy,
     take: filters.limit ?? 60,
     include: {
-      creator: { select: { id: true, name: true } },
-      course: { select: { id: true, durationMin: true } },
+      ...CARD_INCLUDE,
       _count: { select: { reviews: true, enrollments: true } },
     },
   });
+}
+
+/** Paid promotion shares featured exposure; ordinary catalogue sorting stays intact. */
+export async function listFeaturedProducts(limit = 4) {
+  await expireBoosts();
+  const now = new Date();
+  const promoted = await prisma.product.findMany({
+    where: { status: "PUBLISHED", boosts: { some: { status: "ACTIVE", expiresAt: { gt: now } } } },
+    orderBy: { id: "asc" },
+    include: CARD_INCLUDE,
+  });
+  // Hourly rotation avoids selling an exact position; expired boosts never qualify.
+  const offset = promoted.length ? Math.floor(now.getTime() / 3600000) % promoted.length : 0;
+  const selected = [...promoted.slice(offset), ...promoted.slice(0, offset)].slice(0, Math.ceil(limit / 2));
+  const organic = await prisma.product.findMany({
+    where: { status: "PUBLISHED", id: { notIn: selected.map((product) => product.id) } },
+    orderBy: [{ salesCount: "desc" }, { ratingAvg: "desc" }, { createdAt: "desc" }],
+    take: Math.max(0, limit - selected.length),
+    include: CARD_INCLUDE,
+  });
+  return [...selected, ...organic];
 }
 
 export async function getMarketplaceFacets() {
@@ -111,10 +147,12 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function listCreatorProducts(creatorId: string) {
+  await expireBoosts();
   return prisma.product.findMany({
     where: { creatorId },
     orderBy: { updatedAt: "desc" },
     include: {
+      boosts: { orderBy: { createdAt: "desc" }, include: { order: true } },
       course: { select: { id: true, durationMin: true } },
       publication: true,
       _count: { select: { reviews: true, enrollments: true } },

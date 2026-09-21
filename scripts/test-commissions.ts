@@ -32,9 +32,13 @@ function assert(condition: boolean, label: string) {
 const approx = (a: number, b: number) => Math.abs(a - b) < 1e-6;
 
 const rateOf = (split: SplitResult, role: SplitRole) =>
-  split.lines.find((line) => line.role === role)?.rate ?? 0;
+  split.lines.find((line) => role === "REWARDS_POOL"
+    ? line.role === "EMERGENCY_RESERVE" && line.level === undefined
+    : role === "EMERGENCY_RESERVE" ? line.role === role && line.level === 1 : line.role === role)?.rate ?? 0;
 const amountOf = (split: SplitResult, role: SplitRole) =>
-  split.lines.find((line) => line.role === role)?.amount ?? 0;
+  split.lines.find((line) => role === "REWARDS_POOL"
+    ? line.role === "EMERGENCY_RESERVE" && line.level === undefined
+    : role === "EMERGENCY_RESERVE" ? line.role === role && line.level === 1 : line.role === role)?.amount ?? 0;
 const total = (split: SplitResult) =>
   split.lines.reduce((sum, line) => sum + line.amount, 0);
 
@@ -87,8 +91,9 @@ function caseNormal() {
     "45 + 10 + 30 + 5+3+2+2+1 + 2 = 100",
   );
   assert(
-    split.lines.every((line) => line.role !== "EMERGENCY_RESERVE"),
-    "la reserva de emergencia NO aparece en una venta normal",
+    split.lines.filter((line) => line.role === "EMERGENCY_RESERVE").length === 1 &&
+      split.lines.find((line) => line.role === "EMERGENCY_RESERVE")?.amount === 2,
+    "la reserva permanente de 2% siempre existe; no hay reserva adicional sin apertura",
   );
 }
 

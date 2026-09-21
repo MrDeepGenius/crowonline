@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -5,6 +6,8 @@ import { SiteFooter, SiteHeader } from "@/components/layout/site-chrome";
 import { BuyPanel } from "@/components/marketplace/buy-panel";
 import { CourseOutline } from "@/components/marketplace/course-outline";
 import { ProductReviews } from "@/components/marketplace/product-reviews";
+import { LearningGoals } from "@/components/marketplace/learning-goals";
+import { FAQSection } from "@/components/marketplace/faq-section";
 import {
   CreatorBadge,
   DescriptionBlock,
@@ -15,6 +18,7 @@ import {
 } from "@/components/marketplace/product-overview";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug } from "@/server/services/catalog";
+import { getReferredAffiliateCode } from "@/server/services/affiliate";
 import { getCurrentUser } from "@/lib/auth/session";
 import prisma from "@/lib/db";
 
@@ -40,6 +44,16 @@ export default async function ProductPage({
   if (!product) notFound();
 
   const user = await getCurrentUser();
+  const cookieStore = await cookies();
+
+  // Referral attribution priority: explicit ?ref= → cookie persisted by the
+  // middleware when the visitor landed on /marketplace?ref=CODE (30 days) →
+  // durable referral stored at registration for a logged-in buyer.
+  const referralCode =
+    search.ref ??
+    cookieStore.get("crow_ref")?.value ??
+    (user ? await getReferredAffiliateCode(user.id) : null);
+
   const owned = user
     ? Boolean(
         await prisma.orderItem.findFirst({
@@ -55,13 +69,13 @@ export default async function ProductPage({
   const exerciseCount = lessons.reduce((sum, lesson) => sum + lesson.exercises.length, 0);
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="mp-page flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
         <div className="crow-container py-10">
           <Link
             href="/marketplace"
-            className="text-[12px] text-crow-muted transition hover:text-crow-text"
+            className="inline-flex items-center gap-1.5 text-[12px] text-crow-muted transition hover:text-crow-glow"
           >
             ← Volver al marketplace
           </Link>
@@ -71,6 +85,7 @@ export default async function ProductPage({
               <ProductCover
                 coverEmoji={product.coverEmoji}
                 coverGradient={product.coverGradient}
+                coverImageUrl={product.coverImageUrl}
                 type={product.type}
                 category={product.category}
                 durationMin={product.course?.durationMin}
@@ -107,6 +122,10 @@ export default async function ProductPage({
                 <IncludesGrid items={product.includes} />
               </section>
 
+              {product.courseGoals && product.courseGoals.length > 0 ? (
+                <LearningGoals goals={product.courseGoals} />
+              ) : null}
+
               {freeLesson ? (
                 <section className="mt-10">
                   <div className="flex items-center justify-between">
@@ -141,6 +160,8 @@ export default async function ProductPage({
                   />
                 </div>
               </section>
+
+              <FAQSection />
             </div>
 
             <div>
@@ -150,7 +171,7 @@ export default async function ProductPage({
                 compareAt={product.compareAtUsdt}
                 isAuthenticated={Boolean(user)}
                 owned={owned}
-                referralCode={search.ref ?? null}
+                referralCode={referralCode}
               />
             </div>
           </div>

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth/session";
-import { getPlanById } from "@/lib/plans";
+import { getPlanById, planExpiryFrom } from "@/lib/plans";
 import { hasRole } from "@/lib/rbac";
 import type { Role } from "@/lib/domain";
 import { updateLessonContent, updateProductDetails } from "@/server/services/product-writes";
@@ -105,6 +105,7 @@ export async function selectCreatorPlanAction(formData: FormData) {
     String(formData.get("plan") ?? "START") as Parameters<typeof getPlanById>[0],
   );
 
+  const startedAt = new Date();
   await prisma.creatorSubscription.upsert({
     where: { userId: user.id },
     create: {
@@ -113,7 +114,8 @@ export async function selectCreatorPlanAction(formData: FormData) {
       priceUsdt: plan.priceUsdt,
       productLimit: plan.productLimit,
       publishedLimit: plan.publishedLimit,
-      expiresAt: new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000),
+      startedAt,
+      expiresAt: planExpiryFrom(startedAt, plan.durationDays),
     },
     update: {
       plan: plan.id,
@@ -121,7 +123,8 @@ export async function selectCreatorPlanAction(formData: FormData) {
       productLimit: plan.productLimit,
       publishedLimit: plan.publishedLimit,
       status: "ACTIVE",
-      expiresAt: new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000),
+      startedAt,
+      expiresAt: planExpiryFrom(startedAt, plan.durationDays),
     },
   });
 

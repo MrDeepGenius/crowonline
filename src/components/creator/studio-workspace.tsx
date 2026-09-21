@@ -97,7 +97,7 @@ export function StudioWorkspace({ initialIdea = "" }: { initialIdea?: string }) 
 
               <div className="flex flex-wrap items-center gap-2.5">
                 <Badge tone={studio.mode === "live" ? "success" : "warn"}>
-                  {studio.mode === "live" ? studio.provider : `${studio.provider} · demo`}
+                  {studio.mode === "live" ? studio.provider : `${studio.provider} · esqueleto`}
                 </Badge>
               </div>
             </Card>

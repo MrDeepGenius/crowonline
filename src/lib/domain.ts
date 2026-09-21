@@ -127,6 +127,7 @@ export const CREATOR_PLAN_IDS = [
   "PRO",
   "BUSINESS",
   "ELITE",
+  "ELITE_PLUS",
 ] as const;
 export type CreatorPlanId = (typeof CREATOR_PLAN_IDS)[number];
 

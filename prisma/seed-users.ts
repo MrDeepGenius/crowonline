@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 
 import { createUser } from "./seed-helpers";
-import { getCreatorPlan } from "../src/lib/plans";
+import { getCreatorPlan, planExpiryFrom } from "../src/lib/plans";
 
 /** Creates the demo users, creator plans, affiliate tree, referrals and buyers. */
 export async function seedPeople(prisma: PrismaClient) {
@@ -39,7 +39,7 @@ export async function seedPeople(prisma: PrismaClient) {
         priceUsdt: plan.priceUsdt,
         productLimit: plan.productLimit,
         publishedLimit: plan.publishedLimit,
-        expiresAt: new Date(Date.now() + plan.durationDays * 24 * 60 * 60 * 1000),
+        expiresAt: planExpiryFrom(new Date(), plan.durationDays),
       },
     });
   }

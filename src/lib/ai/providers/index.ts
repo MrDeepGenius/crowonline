@@ -54,7 +54,7 @@ export type ProviderAnswer = {
   provider: string;
   model: string;
   attempts: ProviderAttempt[];
-  mode: "live" | "demo";
+  mode: "live" | "skeleton";
 };
 
 /**
@@ -89,11 +89,9 @@ export async function askProviders(
         mode: "live",
       };
     } catch (error) {
-      attempts.push({
-        provider: provider.id,
-        ok: false,
-        error: error instanceof Error ? error.message : "unknown error",
-      });
+      const msg = error instanceof Error ? error.message : "unknown error";
+      attempts.push({ provider: provider.id, ok: false, error: msg });
+      console.error(`[askProviders] ${provider.id} ERROR: ${msg}`);
     }
   }
 

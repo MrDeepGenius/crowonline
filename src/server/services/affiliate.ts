@@ -21,6 +21,14 @@ export async function ensureAffiliate(userId: string, parentAffiliateId?: string
     include: { user: { select: { id: true, name: true, email: true } } },
   });
   if (existing) return existing;
+  const seen = new Set<string>([userId]);
+  let cursor = parentAffiliateId;
+  while (cursor) {
+    const parent = await prisma.affiliate.findUniqueOrThrow({ where: { id: cursor } });
+    if (seen.has(parent.userId)) throw new Error("Ciclo o auto-referido no permitido");
+    seen.add(parent.userId);
+    cursor = parent.parentAffiliateId;
+  }
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -66,7 +74,7 @@ export async function resolveUpline(code: string | null | undefined) {
       where: { id: cursor },
       select: { userId: true, parentAffiliateId: true },
     });
-    if (!parent) break;
+    if (!parent || upline.includes(parent.userId)) break; // corrupt cycle: never pay the same person twice
     upline.push(parent.userId);
     cursor = parent.parentAffiliateId;
   }
@@ -77,6 +85,17 @@ export async function resolveUpline(code: string | null | undefined) {
 export async function registerReferral(code: string, referredUserId: string) {
   const affiliate = await findAffiliateByCode(code);
   if (!affiliate) return null;
+  const visited = new Set<string>([referredUserId]);
+  let ancestor: string | null = affiliate.userId;
+  while (ancestor) {
+    if (visited.has(ancestor)) throw new Error("Ciclo o auto-referido no permitido");
+    visited.add(ancestor);
+    const link: { affiliate: { userId: string } } | null = await prisma.referral.findFirst({
+      where: { referredUserId: ancestor }, include: { affiliate: { select: { userId: true } } },
+      orderBy: { createdAt: "asc" },
+    });
+    ancestor = link?.affiliate.userId ?? null;
+  }
 
   const existing = await prisma.referral.findFirst({
     where: { affiliateId: affiliate.id, referredUserId },

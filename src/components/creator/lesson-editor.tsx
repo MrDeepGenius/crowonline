@@ -112,6 +112,22 @@ export function LessonEditor({
           Preview gratis
         </label>
 
+        <label className="flex items-center gap-2 text-[11.5px] text-crow-muted" title="Esta lección tendrá video generado por CROW">
+          <input
+            type="checkbox"
+            checked={lesson.videoEnabled ?? false}
+            onChange={(event) =>
+              onChange(
+                patchLesson(blueprint, moduleIndex, lessonIndex, {
+                  videoEnabled: event.target.checked,
+                }),
+              )
+            }
+            className="h-3.5 w-3.5 accent-[#6A00FF]"
+          />
+          🎥 Video
+        </label>
+
         <Button
           size="sm"
           variant="ghost"
